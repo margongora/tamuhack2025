@@ -9,7 +9,7 @@ import {
   Form,
   useDisclosure
 } from '@heroui/react'
-import { Map3D } from "@/components/map-3d";
+import { Map3D, Marker3D, Polyline3D } from "@/components/map-3d";
 import { useEffect, useState } from 'react';
 
 export default function Home() {
@@ -53,7 +53,17 @@ export default function Home() {
           </DrawerContent>
         </Drawer>
       </div>
-      <Map3D center={{ lat: 30.267, lng: -97.7431, altitude: 5000 }} />
+      <Map3D>
+        <Polyline3D altitudeMode={'RELATIVE_TO_GROUND'} coordinates={[
+          { lat: 32.7767, lng: -96.7970, altitude: 30000 },
+          { lat: 40.7555, lng: -73.9739, altitude: 30000 },
+        ]}
+          strokeColor="#500000" strokeWidth={10}
+          geodesic
+          drawsOccludedSegments
+        ></Polyline3D>
+        <Marker3D position={{ lat: 32.7767, lng: -96 }}></Marker3D>
+      </Map3D>
     </div>
   );
 }
