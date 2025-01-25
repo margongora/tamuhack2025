@@ -12,6 +12,7 @@ import { useMap3DCameraEvents } from './use-map-3d-camera-events';
 import { useCallbackRef, useDeepCompareEffect } from '../utility-hooks';
 
 import './map-3d-types';
+import { getAllAirports } from '@/lib/client/utils';
 
 export type Map3DProps = google.maps.maps3d.Map3DElementOptions & {
   onCameraChange?: (cameraProps: Map3DCameraProps) => void;
@@ -43,12 +44,28 @@ export const Map3D = forwardRef(
 
     const [customElementsReady, setCustomElementsReady] = useState(false);
     const [userLocation, setUserLocation] = useState<google.maps.LatLngAltitudeLiteral | null>(null);
-    
+
     useEffect(() => {
+
+      if (!map3DElement) return;
+
+      // logic
+      getAllAirports().then((flights) => {
+        // make the markers here
+        
+
+      }).catch((error) => {
+        console.error(error);
+      });
+
+    }, [map3DElement]);
+
+    useEffect(() => {
+
       customElements.whenDefined('gmp-map-3d').then(() => {
         setCustomElementsReady(true);
       });
-      if(navigator.geolocation){
+      if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (position) => {
             const { latitude, longitude } = position.coords;
@@ -60,7 +77,7 @@ export const Map3D = forwardRef(
           },
           (error) => {
             //console.error("Error getting location",error);
-            setUserLocation({lat: 37.7749, lng: -122.4194, altitude: 15000});
+            setUserLocation({ lat: 37.7749, lng: -122.4194, altitude: 15000 });
           }
         );
       }
@@ -93,7 +110,6 @@ export const Map3D = forwardRef(
           heading={heading}
           tilt={tilt}
           roll={roll}>
-
         </gmp-map-3d>
 
       </>
