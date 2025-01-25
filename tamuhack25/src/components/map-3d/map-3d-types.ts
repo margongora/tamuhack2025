@@ -20,12 +20,23 @@ declare global {
           [key in GmpMap3DAttributeNames]?: unknown;
         }
       >;
+      ['gmp-polyline-3d']: CustomElement<
+        google.maps.maps3d.Polyline3DElement,
+        {
+          [key in GmpPolyline3DAttributeNames]?: unknown
+        }
+      >;
     }
   }
 }
 
 type GmpMap3DAttributeNames = keyof Omit<
   google.maps.maps3d.Map3DElementOptions,
+  'bounds'
+>;
+
+type GmpPolyline3DAttributeNames = keyof Omit<
+  google.maps.maps3d.Polyline3DElement,
   'bounds'
 >;
 
