@@ -39,8 +39,8 @@ export default function Home() {
   }, [date])
 
   return (
-    <div className="w-screen h-screen dark">
-      <div className='dark'>
+    <div className="relative w-screen h-screen dark overflow-hidden">
+      <div className='dark absolute top-0 left-0 p-4 z-10'>
         {date !== '' && (<p className='text-white'>{date}</p>)}
         <Button onPress={onOpen}>Input Info</Button>
         <Drawer backdrop='blur' isOpen={isOpen} onOpenChange={onOpenChange} placement="left">

@@ -1,16 +1,16 @@
 "use client";
 
-import { useMapsLibrary } from '@vis.gl/react-google-maps';
+import { useMapsLibrary } from "@vis.gl/react-google-maps";
 import React, {
   ForwardedRef,
   forwardRef,
   ReactNode,
   useEffect,
   useImperativeHandle,
-  useState
-} from 'react';
-import { useMap3DCameraEvents } from './use-map-3d-camera-events';
-import { useCallbackRef, useDeepCompareEffect } from '../utility-hooks';
+  useState,
+} from "react";
+import { useMap3DCameraEvents } from "./use-map-3d-camera-events";
+import { useCallbackRef, useDeepCompareEffect } from "../utility-hooks";
 
 import './map-3d-types';
 import { getAllAirports } from '@/lib/client/utils';
@@ -113,37 +113,22 @@ export const Map3D = forwardRef(
     props: Map3DProps,
     forwardedRef: ForwardedRef<google.maps.maps3d.Map3DElement | null>
   ) => {
-    useMapsLibrary('maps3d');
+    useMapsLibrary("maps3d");
 
     const [map3DElement, map3dRef] =
       useCallbackRef<google.maps.maps3d.Map3DElement>();
 
-    useMap3DCameraEvents(map3DElement, p => {
+    useMap3DCameraEvents(map3DElement, (p) => {
       if (!props.onCameraChange) return;
-
       props.onCameraChange(p);
     });
 
     const [customElementsReady, setCustomElementsReady] = useState(false);
-    const [userLocation, setUserLocation] = useState<google.maps.LatLngAltitudeLiteral | null>(null);
+    const [userLocation, setUserLocation] =
+      useState<google.maps.LatLngAltitudeLiteral | null>(null);
 
     useEffect(() => {
-
-      if (!map3DElement) return;
-
-      // logic
-      getAllAirports().then((flights) => {
-        // make the markers here
-      
-      }).catch((error) => {
-        console.error(error);
-      });
-
-    }, [map3DElement]);
-
-    useEffect(() => {
-
-      customElements.whenDefined('gmp-polyline-3d').then(() => {
+      customElements.whenDefined("gmp-map-3d").then(() => {
         setCustomElementsReady(true);
       });
       if (navigator.geolocation) {
@@ -156,8 +141,7 @@ export const Map3D = forwardRef(
               altitude: 15000,
             });
           },
-          (error) => {
-            //console.error("Error getting location",error);
+          () => {
             setUserLocation({ lat: 37.7749, lng: -122.4194, altitude: 15000 });
           }
         );
@@ -169,18 +153,43 @@ export const Map3D = forwardRef(
     useDeepCompareEffect(() => {
       if (!map3DElement) return;
 
-      // copy all values from map3dOptions to the map3D element itself
       Object.assign(map3DElement, map3dOptions);
+
+      getAllAirports()
+        .then((flights) => {
+
+          if (!map3DElement || !flights) return;
+          
+          flights.forEach((flight) => {
+            const position = {
+              lat: flight.location.latitude,
+              lng: flight.location.longitude,
+              altitude: 0,
+            };
+            //console.log("position:",position)
+            const marker = new google.maps.maps3d.Marker3DInteractiveElement({
+              position: position,
+            });
+
+            marker.addEventListener("gmp-click", (event: any) => {
+              console.log("Marker clicked:", event.target.position);
+            });
+
+            map3DElement.append(marker);
+          });
+        })
+        .catch((error: any) => console.error("Error fetching flights:", error));
     }, [map3DElement, map3dOptions]);
 
-    useImperativeHandle<
-      google.maps.maps3d.Map3DElement | null,
-      google.maps.maps3d.Map3DElement | null
-    >(forwardedRef, () => map3DElement, [map3DElement]);
+    useImperativeHandle(
+      forwardedRef,
+      () => map3DElement!,
+      [map3DElement]
+    );
 
     if (!customElementsReady) return null;
 
-    Map3D.displayName = 'Map3D';
+    Map3D.displayName = "Map3D";
 
     return (
       <>
@@ -195,7 +204,6 @@ export const Map3D = forwardRef(
         </gmp-map-3d>
 
       </>
-
     );
   }
 );
