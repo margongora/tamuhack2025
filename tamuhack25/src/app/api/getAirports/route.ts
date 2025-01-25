@@ -17,11 +17,11 @@ export async function GET(req: NextRequest) {
         // parse the response as JSON
         const data = await response.json();
 
-        const flights = allAirportsOutputSchema.parse(data);
+        const airports = allAirportsOutputSchema.parse(data);
 
-        console.log(flights);
+        console.log(airports);
 
-        return new Response(JSON.stringify(flights), {
+        return new Response(JSON.stringify(airports), {
             headers: {
                 "content-type": "application/json",
             },
