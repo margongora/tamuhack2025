@@ -5,8 +5,8 @@ export const allFlightsOutputSchema = z.array(z.object({
     city: z.string(),
     timezone: z.string(),
     location: z.object({
-        latitute: z.number().optional(),
-        longitude: z.number().optional()
+        latitude: z.number(),
+        longitude: z.number()
     })
 }));
 
