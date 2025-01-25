@@ -12,7 +12,7 @@ import { useMap3DCameraEvents } from './use-map-3d-camera-events';
 import { useCallbackRef, useDeepCompareEffect } from '../utility-hooks';
 
 import './map-3d-types';
-import { getAllFlights } from '@/lib/client/utils';
+import { getAllAirports } from '@/lib/client/utils';
 
 export type Map3DProps = google.maps.maps3d.Map3DElementOptions & {
   onCameraChange?: (cameraProps: Map3DCameraProps) => void;
@@ -50,7 +50,7 @@ export const Map3D = forwardRef(
       if (!map3DElement) return;
 
       // logic
-      getAllFlights().then((flights) => {
+      getAllAirports().then((flights) => {
         // make the markers here
         
 
@@ -61,9 +61,6 @@ export const Map3D = forwardRef(
     }, [map3DElement]);
 
     useEffect(() => {
-
-
-
 
       customElements.whenDefined('gmp-map-3d').then(() => {
         setCustomElementsReady(true);
