@@ -1,4 +1,5 @@
 import Image from "next/image";
+import MapEx from "@/components/MapEx";
 
 export default function Home() {
   return (
@@ -94,6 +95,7 @@ export default function Home() {
             height={16}
           />
           Go to nextjs.org →
+          <MapEx />
         </a>
       </footer>
     </div>
