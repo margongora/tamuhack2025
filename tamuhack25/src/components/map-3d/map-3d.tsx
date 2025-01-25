@@ -44,20 +44,31 @@ export const Map3D = forwardRef(
 
     const [customElementsReady, setCustomElementsReady] = useState(false);
     const [userLocation, setUserLocation] = useState<google.maps.LatLngAltitudeLiteral | null>(null);
-    
+
     useEffect(() => {
 
+      if (!map3DElement) return;
+
+      // logic
       getAllFlights().then((flights) => {
-        console.log(flights);
+        // make the markers here
+        
+
       }).catch((error) => {
         console.error(error);
       });
+
+    }, [map3DElement]);
+
+    useEffect(() => {
+
+
 
 
       customElements.whenDefined('gmp-map-3d').then(() => {
         setCustomElementsReady(true);
       });
-      if(navigator.geolocation){
+      if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (position) => {
             const { latitude, longitude } = position.coords;
@@ -69,7 +80,7 @@ export const Map3D = forwardRef(
           },
           (error) => {
             //console.error("Error getting location",error);
-            setUserLocation({lat: 37.7749, lng: -122.4194, altitude: 15000});
+            setUserLocation({ lat: 37.7749, lng: -122.4194, altitude: 15000 });
           }
         );
       }
