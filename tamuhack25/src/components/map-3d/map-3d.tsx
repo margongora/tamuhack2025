@@ -158,13 +158,13 @@ export const Map3D = forwardRef(
       getAllAirports()
         .then((flights) => {
 
-
+          if (!map3DElement || !flights) return;
           
           flights.forEach((flight) => {
             const position = {
               lat: flight.location.latitude,
               lng: flight.location.longitude,
-              altitude: flight.altitude || 0,
+              altitude: 0,
             };
             //console.log("position:",position)
             const marker = new google.maps.maps3d.Marker3DInteractiveElement({
