@@ -42,10 +42,28 @@ export const Map3D = forwardRef(
     });
 
     const [customElementsReady, setCustomElementsReady] = useState(false);
+    const [userLocation, setUserLocation] = useState<google.maps.LatLngAltitudeLiteral | null>(null);
+    
     useEffect(() => {
       customElements.whenDefined('gmp-map-3d').then(() => {
         setCustomElementsReady(true);
       });
+      if(navigator.geolocation){
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            setUserLocation({
+              lat: latitude,
+              lng: longitude,
+              altitude: 15000,
+            });
+          },
+          (error) => {
+            //console.error("Error getting location",error);
+            setUserLocation({lat: 37.7749, lng: -122.4194, altitude: 15000});
+          }
+        );
+      }
     }, []);
 
     const { center, heading, tilt, range, roll, ...map3dOptions } = props;
@@ -70,7 +88,7 @@ export const Map3D = forwardRef(
       <>
         <gmp-map-3d
           ref={map3dRef}
-          center={center}
+          center={userLocation}
           range={range}
           heading={heading}
           tilt={tilt}
