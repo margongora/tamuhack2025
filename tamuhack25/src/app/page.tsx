@@ -15,6 +15,7 @@ import { useEffect, useState } from 'react';
 export default function Home() {
 
   const [date, setDate] = useState<string>('');
+  const [flights, setFlights] = useState([]);
 
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -28,14 +29,19 @@ export default function Home() {
 
   useEffect(() => {
     if (date !== '') {
-      console.log('date changed')
+      fetch(`https://flight-engine-rp1w.onrender.com/flights?date=${date}&origin=DFW`).then(async (res) => {
+        const flightData = await res.json();
+        setFlights(flightData)
+        console.log(flightData.length)
+      })
+      console.log(date)
     }
   }, [date])
 
   return (
     <div className="w-screen h-screen dark">
       <div className='dark'>
-        <p className='text-white'>{date}</p>
+        {date !== '' && (<p className='text-white'>{date}</p>)}
         <Button onPress={onOpen}>Input Info</Button>
         <Drawer backdrop='blur' isOpen={isOpen} onOpenChange={onOpenChange} placement="left">
           <DrawerContent className='bg-gray-400'>
