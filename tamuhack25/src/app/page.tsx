@@ -11,6 +11,7 @@ import {
 } from '@heroui/react'
 import { Map3D, Marker3D, Polyline3D } from "@/components/map-3d";
 import { useEffect, useState } from 'react';
+import FlightList from '@/components/FlightList';
 
 export default function Home() {
 
@@ -41,7 +42,6 @@ export default function Home() {
   return (
     <div className="relative w-screen h-screen dark overflow-hidden">
       <div className='dark absolute top-0 left-0 p-4 z-10'>
-        {date !== '' && (<p className='text-white'>{date}</p>)}
         <Button onPress={onOpen}>Input Info</Button>
         <Drawer backdrop='blur' isOpen={isOpen} onOpenChange={onOpenChange} placement="left">
           <DrawerContent className='bg-gray-400'>
@@ -58,6 +58,7 @@ export default function Home() {
             )}
           </DrawerContent>
         </Drawer>
+        <FlightList flights={flights as []} />
       </div>
       <Map3D>
         <Polyline3D altitudeMode={'RELATIVE_TO_GROUND'} coordinates={[
