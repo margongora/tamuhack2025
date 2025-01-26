@@ -11,11 +11,10 @@ import {
   SelectItem,
   useDisclosure,
 } from '@heroui/react'
-import { parseDate } from '@internationalized/date'; 
+import { parseDate } from '@internationalized/date';
 import { Map3D, Marker3D, Polyline3D } from "@/components/map-3d";
 import { useEffect, useState } from 'react';
 import FlightList from '@/components/FlightList';
-import { TypeOf } from 'zod';
 import { Flight } from './api/getFlights/_schema';
 
 const airportCodes = [
