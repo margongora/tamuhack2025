@@ -15,17 +15,24 @@ import {
   DrawerFooter,
   RadioGroup,
   Skeleton,
+  Input,
+  cn,
 } from '@heroui/react'
 import { parseDate } from '@internationalized/date';
 import { Map3D, Marker3D } from "@/components/map-3d";
 import { useEffect, useState } from 'react';
-import { getAllAirports, getAllFlights } from '@/lib/client/utils';
+import { getAllAirports, getAllFlights, getItinerary, getPlaceFromName } from '@/lib/client/utils';
 import { AllAirportsOutput } from './api/getAirports/_schema';
 import Airplanes from '@/components/map-stuff/airplanes';
 import { Flight } from './api/getFlights/_schema';
 import { useMap3D } from '@/context/map-context';
 import { DateTimeFormatOptions, DateTime } from 'luxon';
 import ChosenFlight from '@/components/ChosenFlight';
+import { TravelItinerary } from './api/itinerary/_schema';
+import { i } from 'framer-motion/client';
+import { set } from 'zod';
+import { AdvancedMarker3D } from '@/components/map-stuff/advanced-pin';
+import { SparkleIcon, SparklesIcon, XIcon } from 'lucide-react';
 
 interface Coords {
   longitude: number,
@@ -121,6 +128,7 @@ export default function Home() {
     const data = Object.fromEntries(new FormData(e.currentTarget));
     const newFlight = flightList?.filter((flight) => flight['flightNumber'] == data['chosenFlight'])[0];
     setChosenFlight(newFlight);
+    setItinerary(null);
 
     // set the timeOfDay to the milliseconds since midnight of the departure time
     setTimeOfDay(new Date(newFlight!.departureTime).getTime() - new Date(newFlight!.departureTime).setHours(0, 0, 0, 0));
@@ -136,7 +144,7 @@ export default function Home() {
         heading: 0,
         range: 10000
       },
-      durationMillis: 2000
+      durationMillis: 5000
     });
 
   }
@@ -243,16 +251,6 @@ export default function Home() {
         console.log(airport);
         setLoaded(true);
       })
-
-      getAllFlights(date).then((flights) => {
-        if (!flights) return;
-
-        console.log(flights.length);
-        // randomly get 500 flights from the list
-
-      }).catch((err) => {
-        console.error(err);
-      });
     }
   }, [date, airport, airportCodes, airportCoords]);
 
@@ -298,22 +296,103 @@ export default function Home() {
     });
   }
 
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const [itinerary, setItinerary] = useState<TravelItinerary | null>(null);
+  const [currentDescription, setCurrentDescription] = useState<string>('');
+
+  function generateItinerary() {
+
+    if (isLoading || !chosenFlight) return;
+
+    setIsLoading(true);
+
+    getItinerary(chosenFlight.destination.city, chosenFlight.destination.code, date).then((itinerary) => {
+      console.log(itinerary);
+
+      // itinerary?.destinations.forEach(async (destination, i) => {
+      //   const place = await getPlaceFromName(destination.title).then((place) => {
+      //     if (!place) return;
+      //     console.log(place);
+      //   }
+      //   ).catch((err) => {
+      //     console.error(err);
+      //   });
+      // });
+
+      // for each destination in the itinerary, get the place from the name
+      itinerary?.destinations.forEach(async (destination, i) => {
+        const place = await getPlaceFromName(destination.title + " " + chosenFlight.destination.city)
+        if (!place) return;
+        console.log(place);
+        itinerary.destinations[i].latitude = place[0].location.latitude;
+        itinerary.destinations[i].longitude = place[0].location.longitude;
+
+        setTimeout(() => {
+          setCurrentDescription("");
+        }, Math.max((10000 * i) - 1000, 0));
+
+        setTimeout(() => {
+          setCurrentDescription(destination.description);
+          // fly the camera to the destination
+          map3DElement?.flyCameraTo({
+            endCamera: {
+              center: {
+                lat: place[0].location.latitude,
+                lng: place[0].location.longitude,
+                altitude: 250
+              },
+              tilt: 50,
+              heading: 0,
+              range: 1500
+            },
+            durationMillis: 4000
+          });
+        }, 10000 * i);
+      });
+
+      setItinerary(itinerary);
+
+
+
+
+    }).catch((err) => {
+      console.error(err);
+    }).finally(() => {
+      setIsLoading(false);
+    });
+
+    // call the API to get chatGPT to generate an itinerary
+
+
+  }
+
+
+
   return (
     <div className="relative w-screen h-screen flex justify-center items-center dark overflow-hidden">
 
-      {/* {chosenFlight && <div className='absolute top-0 right-0 text-center p-4 z-20 bg-white'>
-        {chosenFlight.flightNumber} - {chosenFlight.origin.code} to {chosenFlight.destination.code} <br/>
-        {chosenFlight.departureTime} to {chosenFlight.arrivalTime} <br/>
-        {new Date(chosenFlight.departureTime).toLocaleTimeString()} to {new Date(chosenFlight.arrivalTime).toLocaleTimeString()} <br />
-        {chosenFlight.duration.locale} <br />
-        {getDatePlusMilliseconds(date, timeOfDay).toLocaleTimeString()} <br />
-        {getDatePlusMilliseconds(date, timeOfDay) < new Date(chosenFlight.departureTime) ? 'Plane has not taken off yet.' : getDatePlusMilliseconds(date, timeOfDay) > new Date(chosenFlight.arrivalTime) ? 'Plane has landed.' : 'Plane is in the air.'}
-        {new Date(chosenFlight.departureTime).getTime() - getDatePlusMilliseconds(date, timeOfDay).getTime()} <br />
-      </div>} */}
+      <div className='absolute bottom-0 w-full pointer-events-none z-20 flex justify-center'>
+        {/* <Input value={date} onChange={(e) => setDate(e.target.value)} /> */}
+        <div className={cn('pointer-events-auto transition-all p-4', chosenFlight && !itinerary && !isLoading ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0')}>
+          <Button className='p-4' disabled={isLoading} disableAnimation={isLoading} disableRipple={isLoading} onPress={generateItinerary}> <SparklesIcon /> Generate Itinerary</Button>
+        </div>
+      </div>
 
-      {/* <div className='absolute bottom-0 bg-white align-middle z-20'>
-        Test
-      </div> */}
+      <div className='absolute top-20 w-full pointer-events-none z-20 flex justify-center'>
+        <div className={cn('pointer-events-auto max-w-[800px] transition-all p-4', currentDescription !== "" ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0')}>
+          <div className='bg-gray-400/50 backdrop-blur-sm p-8 rounded-lg'>
+            <div className='flex gap-2 flex-col'>
+              <div className='font-bold text-xl flex justify-between w-full'>
+                {itinerary && itinerary.destinations.find((destination) => destination.description === currentDescription)?.title}
+                <XIcon className='cursor-pointer' onClick={() => setCurrentDescription('')} />
+              </div>
+              <p>{currentDescription}</p>
+            </div>
+
+          </div>
+        </div>
+      </div>
 
       <div className='dark absolute top-0 left-0 p-4 z-10 flex gap-2'>
         <Button onPress={onOpen1}>Input Info</Button>
@@ -395,7 +474,7 @@ export default function Home() {
           drawsOccludedSegments
         ></Polyline3D> */}
           {airports && airports.map((airport, i) =>
-            <Marker3D key={i} position={{ lat: airport.location.latitude, lng: airport.location.longitude }} onClick={() => {
+            <Marker3D key={i} position={{ lat: airport.location.latitude, lng: airport.location.longitude }} label={airport.code} onClick={() => {
               console.log('clicked')
               map3DElement?.flyCameraTo({
                 endCamera: {
@@ -413,9 +492,32 @@ export default function Home() {
             }}></Marker3D>
           )}
 
+          {itinerary && itinerary.destinations.map((destination, i) => {
+            return <Marker3D color='#DDFFDD' borderColor='#99BB99' glyphColor='#99BB99' key={i} position={{ lat: destination.latitude, lng: destination.longitude }} label={destination.title} onClick={() => {
+              console.log('clicked')
+              setCurrentDescription("");
+              setTimeout(() => {
+                setCurrentDescription(destination.description);
+              }, 500);
+              map3DElement?.flyCameraTo({
+                endCamera: {
+                  center: {
+                    lat: destination.latitude,
+                    lng: destination.longitude,
+                    altitude: 200
+                  },
+                  tilt: 70,
+                  heading: 0,
+                  range: 800
+                },
+                durationMillis: 4000
+              });
+            }}></Marker3D>
+          })}
+
           {(chosenFlight) ? (
             // get date from "date" variable and timeOfDay from "timeOfDay" variable
-            <Airplanes time={
+            <Airplanes chosen time={
               // get the date from the date variable and add the timeOfDay variable of milliseconds to it
               getDatePlusMilliseconds(date, timeOfDay)
             } plane={chosenFlight}></Airplanes>

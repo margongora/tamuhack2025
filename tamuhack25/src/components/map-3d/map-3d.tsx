@@ -49,6 +49,9 @@ export type Marker3DProps = {
   onClick: (event: any) => void;
   label?: string;
   children?: ReactNode;
+  color?: string;
+  borderColor?: string;
+  glyphColor?: string;
 }
 
 export const Polyline3D = forwardRef(
@@ -141,6 +144,7 @@ export const Marker3D = forwardRef(
     forwardedRef: ForwardedRef<google.maps.maps3d.Marker3DInteractiveElement | null>
   ) => {
     useMapsLibrary('maps3d');
+    const markerLib = useMapsLibrary("marker");
 
     const [marker3DElement, marker3dRef] = useCallbackRef<google.maps.maps3d.Marker3DInteractiveElement>();
 
@@ -152,14 +156,30 @@ export const Marker3D = forwardRef(
 
     useEffect(() => {
       // add event listener for click event
-      if (!marker3DElement) return;
+      if (!marker3DElement || !markerLib) return;
 
       marker3DElement.addEventListener('gmp-click', props.onClick);
+
+      if (props.color) {
+        const pin = new markerLib.PinElement({
+          background: props.color,
+          borderColor: props.borderColor ?? "#175eb0", // dark blue
+          glyphColor: props.glyphColor ?? "#175eb0", // dark blue
+          scale: 1,
+        });
+
+        // delete existing children
+        while (marker3DElement.firstChild) {
+          marker3DElement.removeChild(marker3DElement.firstChild);
+        }
+
+        marker3DElement.append(pin);
+      }
 
       return () => {
         marker3DElement.removeEventListener('gmp-click', props.onClick);
       }
-    }, [marker3DElement, props.onClick]);
+    }, [marker3DElement, props.onClick, markerLib]);
 
     const [customElementsReady, setCustomElementsReady] = useState(false);
 
@@ -276,7 +296,7 @@ export const Map3D = forwardRef(
                 },
                 durationMillis: 5000
               });
-            }, 1000);
+            }, 2500);
           },
           () => addUserMarker(fallbackLocation)
         );

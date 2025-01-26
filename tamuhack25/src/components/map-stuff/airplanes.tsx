@@ -8,10 +8,12 @@ import { useMap3D } from "@/context/map-context";
 
 export default function Airplanes({
     plane,
-    time = new Date()
+    time = new Date(),
+    chosen = false
 }: {
     plane: Flight,
-    time: Date
+    time: Date,
+    chosen?: boolean
 }) {
 
     useMapsLibrary("marker");
@@ -35,7 +37,7 @@ export default function Airplanes({
         // if tilt is greater than 45, limit the range
         // const range_tmp = camProps.tilt > 45 ? camProps.range / ((camProps.tilt - 45)/2) : camProps.range;
 
-        console.log(camProps.range, camProps?.range);
+        // console.log(camProps.range, camProps?.range);
 
 
         const distance = camProps.range * Math.cos(tilt_rad);
@@ -91,13 +93,13 @@ export default function Airplanes({
         // if the current time is between the departure and arrival time, the plane is in the air
         const isInAir = currentTime.getTime() > departureTime.getTime() && currentTime.getTime() < arrivalTime.getTime();
 
-        if (!isInAir) {
+        if (!isInAir && !chosen) {
             setCurrentLocation(null);
             return;
         }
 
         // find the percentage of the flight that has been completed
-        const percentage = ((currentTime.getTime() - departureTime.getTime()) / duration.getTime()) * 100;
+        const percentage = Math.min(Math.max(((currentTime.getTime() - departureTime.getTime()) / duration.getTime()) * 100, 0), 100);
 
         // if lat or lng is null, return null
         if (plane.origin.location.latitude === null || plane.origin.location.longitude === null || plane.destination.location.latitude === null || plane.destination.location.longitude === null) {
