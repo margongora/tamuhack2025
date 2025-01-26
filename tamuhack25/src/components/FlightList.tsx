@@ -1,50 +1,65 @@
 'use client'
 import {
-    Button,
-    Drawer,
-    DrawerBody,
-    DrawerContent,
-    DrawerFooter,
-    DrawerHeader,
-    useDisclosure
+  Button,
+  Drawer,
+  DrawerBody,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  Form,
+  Radio,
+  RadioGroup,
+  useDisclosure
 } from '@heroui/react'
-import { ReactElement, JSXElementConstructor, ReactNode, ReactPortal, Key } from 'react';
 
 const FlightList = ({ flights }) => {
-    const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
-    return (
-        <div>
-            <Button onPress={onOpen}>See Flights</Button>
-            <Drawer isOpen={isOpen} onOpenChange={onOpenChange}>
-                <DrawerContent className='bg-gray-400'>
-                    {(onClose) => (
-                        <>
-                            <DrawerHeader>List of flights outgoing from your closest airport.</DrawerHeader>
-                            <DrawerBody>
-                                {flights.length === 0 ? (<p>Please select a date to leave first.</p>) : flights.map((flight: { [x: string]: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; }, idx: Key | null | undefined) => {
-                                    console.log(flight);
-                                    return (
-                                        <p key={idx}>Flight {flight["flightNumber"]} to {flight["destination"]['city']}</p>
-                                    )
-                                })}
-                            </DrawerBody>
-                            <DrawerFooter>
-                                <Button onPress={onClose}>Close list</Button>
-                            </DrawerFooter>
-                        </>
-                    )}
-                </DrawerContent>
-            </Drawer>
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
-            {/* {flights.map((flight, idx) => {
+    const data = Object.fromEntries(new FormData(e.currentTarget));
+    console.log(flights.filter((flight) => flight['flightNumber'] == data['chosenFlight']))
+  }
+
+  return (
+    <div>
+      <Button onPress={onOpen}>See Flights</Button>
+      <Drawer isOpen={isOpen} onOpenChange={onOpenChange}>
+        <DrawerContent className='bg-gray-400'>
+          {(onClose) => (
+            <>
+              <DrawerHeader>List of flights outgoing from your closest airport.</DrawerHeader>
+              <DrawerBody>
+                {flights.length === 0 ? (<p>Please select a date to leave first.</p>) : (
+                  <Form onSubmit={handleSubmit} id='selectFlight'>
+                    <RadioGroup label='Please select a flight.' name='chosenFlight'>
+                      {flights.map((flight, idx: number) => {
+                        const flightNumber = flight["flightNumber"] as string;
+                        return (<Radio key={idx} value={flightNumber}>Flight {flightNumber} to {flight["destination"]["city"]}</Radio>)
+                      })}
+                    </RadioGroup>
+
+                  </Form>
+                )}
+              </DrawerBody>
+              <DrawerFooter>
+                {flights.length !== 0 && <Button color='success' type='submit' onPress={onClose} form='selectFlight'>Select flight</Button>}
+                <Button onPress={onClose}>Close list</Button>
+              </DrawerFooter>
+            </>
+          )}
+        </DrawerContent>
+      </Drawer>
+
+      {/* {flights.map((flight, idx) => {
                 console.log(flight);
                 return (
                     <p key={idx}>{flight["distance"]}</p>
                 )
             })} */}
-        </div>
-    )
+    </div>
+  )
 }
 
 export default FlightList
