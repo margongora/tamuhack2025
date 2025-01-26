@@ -21,6 +21,7 @@ import { AllFlightsOutput } from './api/getFlights/_schema';
 import Airplanes from '@/components/map-stuff/airplanes';
 import FlightList from '@/components/FlightList';
 import { Flight } from './api/getFlights/_schema';
+import { useMap3D } from '@/context/map-context';
 
 const airportCodes = [
   { key: 'atl', label: 'ATL' },
@@ -51,6 +52,10 @@ const airportCodes = [
 ]
 
 export default function Home() {
+
+  const {
+    map3DElement
+  } = useMap3D();
 
   const [airport, setAirport] = useState<string>('dfw');
   const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
@@ -186,6 +191,19 @@ export default function Home() {
         {airports && airports.map((airport, i) =>
           <Marker3D key={i} position={{ lat: airport.location.latitude, lng: airport.location.longitude }} onClick={() => {
             console.log('clicked')
+            map3DElement?.flyCameraTo({
+              endCamera: {
+                center: {
+                  lat: airport.location.latitude,
+                  lng: airport.location.longitude,
+                  altitude: 1000
+                },
+                tilt: 45,
+                heading: 0,
+                range: 10000
+              },
+              durationMillis: 2000
+            });
           }}></Marker3D>
         )}
 
