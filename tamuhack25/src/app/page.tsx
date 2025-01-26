@@ -122,6 +122,9 @@ export default function Home() {
     const newFlight = flightList?.filter((flight) => flight['flightNumber'] == data['chosenFlight'])[0];
     setChosenFlight(newFlight);
 
+    // set the timeOfDay to the milliseconds since midnight of the departure time
+    setTimeOfDay(new Date(newFlight!.departureTime).getTime() - new Date(newFlight!.departureTime).setHours(0, 0, 0, 0));
+
     map3DElement?.flyCameraTo({
       endCamera: {
         center: {
@@ -278,6 +281,8 @@ export default function Home() {
 
   function getDatePlusMilliseconds(date: string, milliseconds: number) {
     const d = new Date(date);
+    d.setDate(d.getDate() + 1);
+    d.setHours(0, 0, 0, 0);
     d.setMilliseconds(milliseconds);
     return d;
   }
@@ -286,6 +291,21 @@ export default function Home() {
 
   return (
     <div className="relative w-screen h-screen dark overflow-hidden">
+
+      {/* {chosenFlight && <div className='absolute top-0 right-0 text-center p-4 z-20 bg-white'>
+        {chosenFlight.flightNumber} - {chosenFlight.origin.code} to {chosenFlight.destination.code} <br/>
+        {chosenFlight.departureTime} to {chosenFlight.arrivalTime} <br/>
+        {new Date(chosenFlight.departureTime).toLocaleTimeString()} to {new Date(chosenFlight.arrivalTime).toLocaleTimeString()} <br />
+        {chosenFlight.duration.locale} <br />
+        {getDatePlusMilliseconds(date, timeOfDay).toLocaleTimeString()} <br />
+        {getDatePlusMilliseconds(date, timeOfDay) < new Date(chosenFlight.departureTime) ? 'Plane has not taken off yet.' : getDatePlusMilliseconds(date, timeOfDay) > new Date(chosenFlight.arrivalTime) ? 'Plane has landed.' : 'Plane is in the air.'}
+        {new Date(chosenFlight.departureTime).getTime() - getDatePlusMilliseconds(date, timeOfDay).getTime()} <br />
+      </div>} */}
+
+      <div className='absolute bottom-0 bg-white align-middle z-20'>
+        Test
+      </div>
+
       <div className='dark absolute top-0 left-0 p-4 z-10'>
         <Button onPress={onOpen1}>Input Info</Button>
         <Drawer classNames={{
