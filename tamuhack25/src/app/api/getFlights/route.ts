@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
 
         const flights = allFlightsOutputSchema.parse(data);
 
-        console.log(flights);
+        // console.log(flights);
 
         return new Response(JSON.stringify(flights), {
             headers: {

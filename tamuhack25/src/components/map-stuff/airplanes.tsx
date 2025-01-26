@@ -21,7 +21,7 @@ export default function Airplanes({
 
     const [currentLocation, setCurrentLocation] = useState<{ lat: number, lng: number } | null>(null);
 
-    const minMax = [1, 2000];
+    const minMax = [2, 2000];
 
     function getScale() {
         // get camera distance from the ground using range and tilt
@@ -125,7 +125,7 @@ export default function Airplanes({
             return {
                 lat: 0,
                 lng: 0,
-                altitude: 100
+                altitude: 105
             }
         }
 
@@ -200,7 +200,7 @@ export default function Airplanes({
             { lat: plane.origin.location.latitude, lng: plane.origin.location.longitude, altitude: 100 },
             getTrailCoordinates(),
         ]}
-            strokeColor={currentLocation ? "#FFFFFF77" : "transparent"} strokeWidth={currentLocation ? 5 : 0}
+            strokeColor={currentLocation ? "#EEFFFF77" : "transparent"} strokeWidth={currentLocation ? 5 : 0}
             // geodesic
             drawsOccludedSegments
         ></Polyline3D>

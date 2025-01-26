@@ -115,7 +115,7 @@ export const Model3D = forwardRef(
     }, []);
 
 
-    
+
     const [customElementsReady, setCustomElementsReady] = useState(false);
 
     useImperativeHandle<
@@ -222,9 +222,25 @@ export const Map3D = forwardRef(
           lng: position.lng,
           altitude: 0,
         };
-        marker.addEventListener("gmp-click", (event: any) =>
+        marker.addEventListener("gmp-click", (event: any) => {
           console.log("User Marker clicked:", event.target.position)
-        );
+
+          map3DElement?.flyCameraTo({
+            endCamera: {
+              center: {
+                lat: position.lat,
+                lng: position.lng,
+                altitude: 200
+              },
+              tilt: 70,
+              heading: 0,
+              range: 800
+            },
+            durationMillis: 8000
+          });
+
+
+        });
 
         // make a pin 
         const pin = new markerLib.PinElement({
@@ -244,7 +260,23 @@ export const Map3D = forwardRef(
         navigator.geolocation.getCurrentPosition(
           (position) => {
             addUserMarker({ lat: position.coords.latitude, lng: position.coords.longitude });
-            setUserLocation({ lat: position.coords.latitude, lng: position.coords.longitude, altitude: 1000 });
+            // setUserLocation({ lat: position.coords.latitude, lng: position.coords.longitude, altitude: 1000 });
+
+            setTimeout(() => {
+              map3DElement?.flyCameraTo({
+                endCamera: {
+                  center: {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude,
+                    altitude: 200
+                  },
+                  tilt: 70,
+                  heading: 0,
+                  range: 800
+                },
+                durationMillis: 5000
+              });
+            }, 1000);
           },
           () => addUserMarker(fallbackLocation)
         );

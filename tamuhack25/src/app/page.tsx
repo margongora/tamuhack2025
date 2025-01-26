@@ -50,7 +50,7 @@ const Destination = ({ destination, flights }: { destination: string, flights: F
     <details>
       <summary>{numFlights} flights available</summary>
 
-      {flights.map((flight) => {
+      {flights.map((flight, i) => {
         const flightNumber = flight.flightNumber;
 
         const timeFormat: DateTimeFormatOptions = {
@@ -63,7 +63,7 @@ const Destination = ({ destination, flights }: { destination: string, flights: F
         const arrivalTime = DateTime.fromISO(flight.arrivalTime).toLocaleString({ timeZone: flight.destination.timezone, ...timeFormat });
 
         return (
-          <Radio key={flightNumber} value={flightNumber}
+          <Radio key={flightNumber + i} value={flightNumber}
             description={`Flight no. ${flightNumber} - ${flight.duration.locale}`}>
             <strong>{departureTime}</strong> to <strong>{arrivalTime}</strong>
           </Radio>);
@@ -89,7 +89,7 @@ export default function Home() {
   const [airportCoords, setAirportCoords] = useState<Coords[]>([]);
   const [currLocation, setCurrLocation] = useState<Coords | undefined>(undefined);
 
-  const [timeOfDay, setTimeOfDay] = useState<number>(0);
+  const [timeOfDay, setTimeOfDay] = useState<number>(new Date().getTime() - new Date().setHours(0, 0, 0, 0));
 
   const { isOpen: isOpen1, onOpen: onOpen1, onOpenChange: onOpenChange1 } = useDisclosure();
   const { isOpen: isOpen2, onOpen: onOpen2, onOpenChange: onOpenChange2 } = useDisclosure();
@@ -287,10 +287,19 @@ export default function Home() {
     return d;
   }
 
-  const destinations = Object.groupBy(flightList ? flightList : [], (item) => item["destination"]["code"]);
+  // const destinations = Object.groupBy(flightList ? flightList : [], (item) => item["destination"]["code"]);
+  const destinations: { [key: string]: Flight[] } = {};
+  if (flightList) {
+    flightList.forEach((flight) => {
+      if (!destinations[flight.destination.code]) {
+        destinations[flight.destination.code] = [];
+      }
+      destinations[flight.destination.code].push(flight);
+    });
+  }
 
   return (
-    <div className="relative w-screen h-screen dark overflow-hidden">
+    <div className="relative w-screen h-screen flex justify-center items-center dark overflow-hidden">
 
       {/* {chosenFlight && <div className='absolute top-0 right-0 text-center p-4 z-20 bg-white'>
         {chosenFlight.flightNumber} - {chosenFlight.origin.code} to {chosenFlight.destination.code} <br/>
@@ -306,7 +315,7 @@ export default function Home() {
         Test
       </div> */}
 
-      <div className='dark absolute top-0 left-0 p-4 z-10'>
+      <div className='dark absolute top-0 left-0 p-4 z-10 flex gap-2'>
         <Button onPress={onOpen1}>Input Info</Button>
         <Drawer classNames={{
           backdrop: 'backdrop-blur-md',
@@ -375,8 +384,9 @@ export default function Home() {
           <Button onPress={handleChosenReset}>Reset Chosen Flight</Button>
         )}
       </div>
-      <Map3D>
-        {/* <Polyline3D altitudeMode={'RELATIVE_TO_GROUND'} coordinates={[
+      <div className='scale-[100.75%] w-full h-full'>
+        <Map3D>
+          {/* <Polyline3D altitudeMode={'RELATIVE_TO_GROUND'} coordinates={[
           { lat: 32.7767, lng: -96.7970, altitude: 30000 },
           { lat: 40.7555, lng: -73.9739, altitude: 30000 },
         ]}
@@ -384,47 +394,48 @@ export default function Home() {
           geodesic
           drawsOccludedSegments
         ></Polyline3D> */}
-        {airports && airports.map((airport, i) =>
-          <Marker3D key={i} position={{ lat: airport.location.latitude, lng: airport.location.longitude }} onClick={() => {
-            console.log('clicked')
-            map3DElement?.flyCameraTo({
-              endCamera: {
-                center: {
-                  lat: airport.location.latitude,
-                  lng: airport.location.longitude,
-                  altitude: 1000
+          {airports && airports.map((airport, i) =>
+            <Marker3D key={i} position={{ lat: airport.location.latitude, lng: airport.location.longitude }} onClick={() => {
+              console.log('clicked')
+              map3DElement?.flyCameraTo({
+                endCamera: {
+                  center: {
+                    lat: airport.location.latitude,
+                    lng: airport.location.longitude,
+                    altitude: 200
+                  },
+                  tilt: 70,
+                  heading: 0,
+                  range: 800
                 },
-                tilt: 45,
-                heading: 0,
-                range: 10000
-              },
-              durationMillis: 2000
-            });
-          }}></Marker3D>
-        )}
+                durationMillis: 4000
+              });
+            }}></Marker3D>
+          )}
 
-        {(chosenFlight) ? (
-          // get date from "date" variable and timeOfDay from "timeOfDay" variable
-          <Airplanes time={
-            // get the date from the date variable and add the timeOfDay variable of milliseconds to it
-            getDatePlusMilliseconds(date, timeOfDay)
-          } plane={chosenFlight}></Airplanes>
-        ) : (flightList) ? flightList.map((flight, i) => {
+          {(chosenFlight) ? (
+            // get date from "date" variable and timeOfDay from "timeOfDay" variable
+            <Airplanes time={
+              // get the date from the date variable and add the timeOfDay variable of milliseconds to it
+              getDatePlusMilliseconds(date, timeOfDay)
+            } plane={chosenFlight}></Airplanes>
+          ) : (flightList) ? flightList.map((flight, i) => {
 
-          const parsedDate = getDatePlusMilliseconds(date, timeOfDay);
+            const parsedDate = getDatePlusMilliseconds(date, timeOfDay);
 
-          // if the flight is not in the air, don't show it
-          if (parsedDate < new Date(flight.departureTime) || parsedDate > new Date(flight.arrivalTime)) {
-            return null;
-          }
+            // if the flight is not in the air, don't show it
+            if (parsedDate < new Date(flight.departureTime) || parsedDate > new Date(flight.arrivalTime)) {
+              return null;
+            }
 
-          // get date from "date" variable and timeOfDay from "timeOfDay" variable
-          return <Airplanes time={
-            // get the date from the date variable and add the timeOfDay variable of milliseconds to it
-            getDatePlusMilliseconds(date, timeOfDay)
-          } key={i} plane={flight}></Airplanes>
-        }) : null}
-      </Map3D>
+            // get date from "date" variable and timeOfDay from "timeOfDay" variable
+            return <Airplanes time={
+              // get the date from the date variable and add the timeOfDay variable of milliseconds to it
+              getDatePlusMilliseconds(date, timeOfDay)
+            } key={i} plane={flight}></Airplanes>
+          }) : null}
+        </Map3D>
+      </div>
     </div>
   );
 }
