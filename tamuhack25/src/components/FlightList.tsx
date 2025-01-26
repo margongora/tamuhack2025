@@ -11,6 +11,7 @@ import {
   Form,
   Radio,
   RadioGroup,
+  Skeleton,
   useDisclosure
 } from '@heroui/react'
 
@@ -48,7 +49,7 @@ const Destination = ({ destination, flights }) => {
   </div>
 }
 
-const FlightList = ({ airport, date, flights }) => {
+const FlightList = ({ airport, date, flights, loading }) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -70,22 +71,23 @@ const FlightList = ({ airport, date, flights }) => {
               <DrawerHeader>List of flights outgoing from your closest airport.</DrawerHeader>
               <DrawerBody>
                 {flights.length === 0 ? (<p>Please select a date to leave first.</p>) : (
-                  <Form onSubmit={handleSubmit} id='selectFlight'>
-                    <span>Leaving from {airport.toUpperCase()} on {date}</span>
-                    {/*<RadioGroup label='Please select a flight.' name='chosenFlight'>
-                      {flights.map((flight, idx: number) => {
-                        const flightNumber = flight["flightNumber"] as string;
-                        return (<Radio key={idx} value={flightNumber}>Flight {flightNumber} to {flight["destination"]["city"]}</Radio>)
-                      })}
-                    </RadioGroup>*/}
-                    {
+                  <Skeleton isLoaded={loading}>
+                    <Form onSubmit={handleSubmit} id='selectFlight'>
+                      <span>Leaving from {airport.toUpperCase()} on {date}</span>
+                      {/*<RadioGroup label='Please select a flight.' name='chosenFlight'>
+                        {flights.map((flight, idx: number) => {
+                          const flightNumber = flight["flightNumber"] as string;
+                          return (<Radio key={idx} value={flightNumber}>Flight {flightNumber} to {flight["destination"]["city"]}</Radio>)
+                        })}
+                      </RadioGroup>*/}
+                      {
 
-                      Object.entries(destinations).map((entry, idx) => {
-                        return <Destination destination={entry[0]} flights={entry[1]} key={idx} />;
-                      })
-                    }
-
-                  </Form>
+                        Object.entries(destinations).map((entry, idx) => {
+                          return <Destination destination={entry[0]} flights={entry[1]} key={idx} />;
+                        })
+                      }
+                    </Form>
+                  </Skeleton>
                 )}
               </DrawerBody>
               <DrawerFooter>

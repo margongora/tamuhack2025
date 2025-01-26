@@ -48,6 +48,7 @@ export default function Home() {
   const [airport, setAirport] = useState<string>('dfw');
   const [date, setDate] = useState<string>('');
   const [flights, setFlights] = useState([]);
+  const [loaded, setLoaded] = useState<boolean>(false);
 
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -64,9 +65,11 @@ export default function Home() {
   useEffect(() => {
     if (date !== '') {
       fetch(`https://flight-engine-rp1w.onrender.com/flights?date=${date}&origin=${airport.toUpperCase()}`).then(async (res) => {
+        setLoaded(false);
         const flightData = await res.json();
-        setFlights(flightData)
-        console.log(flightData.length)
+        setFlights(flightData);
+        console.log(flightData.length);
+        setLoaded(true);
       })
       console.log(date)
     }
@@ -96,7 +99,7 @@ export default function Home() {
             )}
           </DrawerContent>
         </Drawer>
-        <FlightList airport={airport} date={date} flights={flights as []} />
+        <FlightList airport={airport} date={date} flights={flights as []} loading={loaded} />
       </div>
       <Map3D>
         <Polyline3D altitudeMode={'RELATIVE_TO_GROUND'} coordinates={[
