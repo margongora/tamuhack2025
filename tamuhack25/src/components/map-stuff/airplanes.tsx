@@ -196,14 +196,14 @@ export default function Airplanes({
         ></Polyline3D>
 
         {/* Create short trail 10% of the way */}
-        {/* <Polyline3D altitudeMode={'RELATIVE_TO_GROUND'} coordinates={[
+        <Polyline3D altitudeMode={'RELATIVE_TO_GROUND'} coordinates={[
             { lat: plane.origin.location.latitude, lng: plane.origin.location.longitude, altitude: 100 },
             getTrailCoordinates(),
         ]}
             strokeColor={currentLocation ? "#FFFFFF77" : "transparent"} strokeWidth={currentLocation ? 5 : 0}
             // geodesic
             drawsOccludedSegments
-        ></Polyline3D> */}
+        ></Polyline3D>
 
     </>
     )

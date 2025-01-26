@@ -185,6 +185,7 @@ export const Map3D = forwardRef(
     forwardedRef: ForwardedRef<google.maps.maps3d.Map3DElement | null>
   ) => {
     useMapsLibrary("maps3d");
+    const markerLib = useMapsLibrary("marker");
 
     const { map3DElement, map3dRef, setCamProps } = useMap3D();
 
@@ -208,7 +209,7 @@ export const Map3D = forwardRef(
     const { center, heading, tilt, range, roll, children, ...map3dOptions } = props;
 
     useDeepCompareEffect(() => {
-      if (!map3DElement) return;
+      if (!map3DElement || !markerLib) return;
 
       Object.assign(map3DElement, map3dOptions);
 
@@ -224,6 +225,18 @@ export const Map3D = forwardRef(
         marker.addEventListener("gmp-click", (event: any) =>
           console.log("User Marker clicked:", event.target.position)
         );
+
+        // make a pin 
+        const pin = new markerLib.PinElement({
+          background: "#42aaf5",
+          borderColor: "#175eb0", // dark blue
+          glyphColor: "#175eb0", // dark blue
+          scale: 1,
+        });
+
+        marker.append(pin);
+
+
         map3DElement.append(marker);
       };
 
@@ -259,7 +272,7 @@ export const Map3D = forwardRef(
 
       // })
       // .catch((error) => console.error("Error fetching flights:", error));
-    }, [map3DElement, map3dOptions]);
+    }, [map3DElement, map3dOptions, markerLib]);
 
 
 
