@@ -25,6 +25,7 @@ import Airplanes from '@/components/map-stuff/airplanes';
 import { Flight } from './api/getFlights/_schema';
 import { useMap3D } from '@/context/map-context';
 import { DateTimeFormatOptions, DateTime } from 'luxon';
+import ChosenFlight from '@/components/ChosenFlight';
 
 const airportCodes = [
   { key: 'atl', label: 'ATL' },
@@ -214,7 +215,11 @@ export default function Home() {
     e.preventDefault();
 
     const data = Object.fromEntries(new FormData(e.currentTarget));
-    setChosenFlight(flights?.filter((flight) => flight['flightNumber'] == data['chosenFlight'])[0])
+    setChosenFlight(flightList?.filter((flight) => flight['flightNumber'] == data['chosenFlight'])[0])
+  }
+
+  const handleChosenReset = () => {
+    setChosenFlight(undefined);
   }
 
   useEffect(() => {
@@ -336,40 +341,42 @@ export default function Home() {
             )}
           </DrawerContent>
         </Drawer>
-        <div>
-          <Button onPress={onOpen2}>See Flights</Button>
-          <Drawer isOpen={isOpen2} classNames={{
-            backdrop: 'backdrop-blur-md',
-          }} onOpenChange={onOpenChange2}>
-            <DrawerContent className='bg-gray-400/90'>
-              {(onClose) => (
-                <>
-                  <DrawerHeader>List of flights outgoing from your closest airport.</DrawerHeader>
-                  <DrawerBody>
-                    {flightList ? (
-                      <Skeleton isLoaded={loaded}>
-                        <Form onSubmit={onFlightSubmit} id='selectFlight'>
-                          <span>Leaving from {airport.toUpperCase()} on {date}</span>
-                          <RadioGroup label='Please select a flight.' className='w-full' name='chosenFlight'>
-                            {
-                              Object.entries(destinations).map((entry, idx) => {
-                                return entry[1] ? <Destination destination={entry[0]} flights={entry[1]} key={idx} /> : null;
-                              })
-                            }
-                          </RadioGroup>
-                        </Form>
-                      </Skeleton>
-                    ) : (<p>Please select a date to leave first.</p>)}
-                  </DrawerBody>
-                  <DrawerFooter>
-                    {flightList && <Button color='success' type='submit' onPress={onClose} form='selectFlight'>Select flight</Button>}
-                    <Button onPress={onClose}>Close list</Button>
-                  </DrawerFooter>
-                </>
-              )}
-            </DrawerContent>
-          </Drawer>
-        </div>
+        <Button onPress={onOpen2}>See Flights</Button>
+        <Drawer isOpen={isOpen2} classNames={{
+          backdrop: 'backdrop-blur-md',
+        }} onOpenChange={onOpenChange2}>
+          <DrawerContent className='bg-gray-400/90'>
+            {(onClose) => (
+              <>
+                <DrawerHeader>List of flights outgoing from your closest airport.</DrawerHeader>
+                <DrawerBody>
+                  {flightList ? (
+                    <Skeleton isLoaded={loaded}>
+                      <Form onSubmit={onFlightSubmit} id='selectFlight'>
+                        <span>Leaving from {airport.toUpperCase()} on {date}</span>
+                        <RadioGroup label='Please select a flight.' className='w-full' name='chosenFlight'>
+                          {
+                            Object.entries(destinations).map((entry, idx) => {
+                              return entry[1] ? <Destination destination={entry[0]} flights={entry[1]} key={idx} /> : null;
+                            })
+                          }
+                        </RadioGroup>
+                      </Form>
+                    </Skeleton>
+                  ) : (<p>Please select a date to leave first.</p>)}
+                </DrawerBody>
+                <DrawerFooter>
+                  {flightList && <Button color='success' type='submit' onPress={onClose} form='selectFlight'>Select flight</Button>}
+                  <Button onPress={onClose}>Close list</Button>
+                </DrawerFooter>
+              </>
+            )}
+          </DrawerContent>
+        </Drawer>
+        <ChosenFlight flight={chosenFlight} />
+        {chosenFlight && (
+          <Button onPress={handleChosenReset}>Reset Chosen Flight</Button>
+        )}
       </div>
       <Map3D>
         {/* <Polyline3D altitudeMode={'RELATIVE_TO_GROUND'} coordinates={[
