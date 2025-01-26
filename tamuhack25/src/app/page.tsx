@@ -82,12 +82,12 @@ export default function Home() {
   const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [airport, setAirport] = useState<string>('');
   const [chosenFlight, setChosenFlight] = useState<Flight | undefined>(undefined);
-  const [flights, setFlights] = useState<Flight[] | undefined>(undefined);
   const [flightList, setFlightList] = useState<Flight[] | undefined>(undefined);
   const [airports, setAirports] = useState<AllAirportsOutput | undefined>(undefined);
   const [loaded, setLoaded] = useState<boolean>(false);
   const [airportCodes, setAirportCodes] = useState<{ key: string, label: string }[]>([]);
   const [airportCoords, setAirportCoords] = useState<Coords[]>([]);
+  const [currLocation, setCurrLocation] = useState<Coords | undefined>(undefined);
 
   const [timeOfDay, setTimeOfDay] = useState<number>(0);
 
@@ -140,6 +140,19 @@ export default function Home() {
 
   const handleChosenReset = () => {
     setChosenFlight(undefined);
+    map3DElement?.flyCameraTo({
+      endCamera: {
+        center: {
+          lat: currLocation!.latitude,
+          lng: currLocation!.longitude,
+          altitude: 1000
+        },
+        tilt: 45,
+        heading: 0,
+        range: 10000
+      },
+      durationMillis: 2000
+    });
   }
 
   useEffect(() => {
@@ -174,6 +187,7 @@ export default function Home() {
         navigator.geolocation.getCurrentPosition(
           (position) => {
             const { latitude, longitude } = position.coords;
+            setCurrLocation({ latitude, longitude });
             let closestIndex = 0;
             let distance = Infinity;
             airportCoords.forEach((coords, idx) => {
@@ -196,6 +210,7 @@ export default function Home() {
             navigator.geolocation.getCurrentPosition(
               (position) => {
                 const { latitude, longitude } = position.coords;
+                setCurrLocation({ latitude, longitude });
                 let closestIndex = 0;
                 let distance = Infinity;
 
