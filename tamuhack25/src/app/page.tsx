@@ -430,6 +430,7 @@ export default function Home() {
                 setPrompt(val);
               })} className={cn("mt-4 w-max min-w-96 light transition-all", isLoading ? "translate-y-full opacity-0" : "opacity-100 translate-y-0")} placeholder='Ask a question' />
             </form>}
+            
         </div>
       </div>
 
