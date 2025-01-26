@@ -7,14 +7,45 @@ import {
   DrawerContent,
   DrawerHeader,
   Form,
+  Select,
+  SelectItem,
   useDisclosure
 } from '@heroui/react'
 import { Map3D, Marker3D, Polyline3D } from "@/components/map-3d";
 import { useEffect, useState } from 'react';
 import FlightList from '@/components/FlightList';
 
+const airportCodes = [
+  { key: 'atl', label: 'ATL' },
+  { key: 'bos', label: 'BOS' },
+  { key: 'bwi', label: 'BWI' },
+  { key: 'clt', label: 'CLT' },
+  { key: 'den', label: 'DEN' },
+  { key: 'dfw', label: 'DFW' },
+  { key: 'dtw', label: 'DTW' },
+  { key: 'ewr', label: 'EWR' },
+  { key: 'fll', label: 'FLL' },
+  { key: 'gso', label: 'GSO' },
+  { key: 'iah', label: 'IAH' },
+  { key: 'jfk', label: 'JFK' },
+  { key: 'las', label: 'LAS' },
+  { key: 'lax', label: 'LAX' },
+  { key: 'mco', label: 'MCO' },
+  { key: 'mia', label: 'MIA' },
+  { key: 'msp', label: 'MSP' },
+  { key: 'ord', label: 'ORD' },
+  { key: 'phl', label: 'PHL' },
+  { key: 'phx', label: 'PHX' },
+  { key: 'san', label: 'SAN' },
+  { key: 'sea', label: 'SEA' },
+  { key: 'sfo', label: 'SFO' },
+  { key: 'slc', label: 'SLC' },
+  { key: 'tpa', label: 'TPA' }
+]
+
 export default function Home() {
 
+  const [airport, setAirport] = useState<string>('dfw');
   const [date, setDate] = useState<string>('');
   const [flights, setFlights] = useState([]);
 
@@ -25,19 +56,21 @@ export default function Home() {
 
     // Get form data as an object.
     const data = Object.fromEntries(new FormData(e.currentTarget));
+    console.log(data);
     setDate(data['leaveDate'] as string);
+    setAirport(data['leaveAirport'] as string)
   };
 
   useEffect(() => {
     if (date !== '') {
-      fetch(`https://flight-engine-rp1w.onrender.com/flights?date=${date}&origin=DFW`).then(async (res) => {
+      fetch(`https://flight-engine-rp1w.onrender.com/flights?date=${date}&origin=${airport.toUpperCase()}`).then(async (res) => {
         const flightData = await res.json();
         setFlights(flightData)
         console.log(flightData.length)
       })
       console.log(date)
     }
-  }, [date])
+  }, [date, airport])
 
   return (
     <div className="relative w-screen h-screen dark overflow-hidden">
@@ -47,10 +80,15 @@ export default function Home() {
           <DrawerContent className='bg-gray-400'>
             {(onClose) => (
               <>
-                <DrawerHeader>Input what date you&apos;d like to leave.</DrawerHeader>
+                <DrawerHeader>Input what date and airport from which you&apos;d like to leave.</DrawerHeader>
                 <DrawerBody>
                   <Form onSubmit={onSubmit}>
                     <DatePicker name='leaveDate' className='text-black' />
+                    <Select name='leaveAirport' items={airportCodes} defaultSelectedKeys={[airport]}>
+                      {airportCodes.map((airport) => (
+                        <SelectItem key={airport.key}>{airport.label}</SelectItem>
+                      ))}
+                    </Select>
                     <Button type='submit' onPress={onClose}>Submit</Button>
                   </Form>
                 </DrawerBody>
@@ -58,7 +96,7 @@ export default function Home() {
             )}
           </DrawerContent>
         </Drawer>
-        <FlightList flights={flights as []} />
+        <FlightList airport={airport} date={date} flights={flights as []} />
       </div>
       <Map3D>
         <Polyline3D altitudeMode={'RELATIVE_TO_GROUND'} coordinates={[

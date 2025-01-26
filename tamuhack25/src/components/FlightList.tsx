@@ -12,7 +12,7 @@ import {
   useDisclosure
 } from '@heroui/react'
 
-const FlightList = ({ flights }) => {
+const FlightList = ({ airport, date, flights }) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -32,15 +32,17 @@ const FlightList = ({ flights }) => {
               <DrawerHeader>List of flights outgoing from your closest airport.</DrawerHeader>
               <DrawerBody>
                 {flights.length === 0 ? (<p>Please select a date to leave first.</p>) : (
-                  <Form onSubmit={handleSubmit} id='selectFlight'>
-                    <RadioGroup label='Please select a flight.' name='chosenFlight'>
-                      {flights.map((flight, idx: number) => {
-                        const flightNumber = flight["flightNumber"] as string;
-                        return (<Radio key={idx} value={flightNumber}>Flight {flightNumber} to {flight["destination"]["city"]}</Radio>)
-                      })}
-                    </RadioGroup>
-
-                  </Form>
+                  <>
+                    <span>Leaving from {airport.toUpperCase()} on {date}</span>
+                    <Form onSubmit={handleSubmit} id='selectFlight'>
+                      <RadioGroup label='Please select a flight.' name='chosenFlight'>
+                        {flights.map((flight, idx: number) => {
+                          const flightNumber = flight["flightNumber"] as string;
+                          return (<Radio key={idx} value={flightNumber}>Flight {flightNumber} to {flight["destination"]["city"]}</Radio>)
+                        })}
+                      </RadioGroup>
+                    </Form>
+                  </>
                 )}
               </DrawerBody>
               <DrawerFooter>
