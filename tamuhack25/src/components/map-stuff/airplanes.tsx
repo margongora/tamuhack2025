@@ -1,6 +1,9 @@
 import { Flight } from "@/app/api/getFlights/_schema";
 import { Marker3D, Polyline3D } from "../map-3d";
-import { useEffect, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
+import { useMapsLibrary } from "@vis.gl/react-google-maps";
+import { AdvancedMarker3D } from "./advanced-pin";
+import { Model3D } from "./model";
 
 export default function Airplanes({
     plane,
@@ -10,10 +13,13 @@ export default function Airplanes({
     time: Date
 }) {
 
+    useMapsLibrary("marker");
+
     const [currentLocation, setCurrentLocation] = useState<{ lat: number, lng: number } | null>(null);
 
     useEffect(() => {
 
+        // check if ends with alpha 
         // get current time
         const currentTime = time;
 
@@ -49,7 +55,6 @@ export default function Airplanes({
             lng: plane.origin.location.longitude + ((plane.destination.location.longitude - plane.origin.location.longitude) * (percentage / 100)),
         };
 
-        console.log('currentLocation:', currentLocation);
 
         if (isNaN(currentLocation.lat) || isNaN(currentLocation.lng)) {
             return;
@@ -60,12 +65,30 @@ export default function Airplanes({
 
     return (<>
         {currentLocation ? <>
-            <Marker3D position={{
-                lat: currentLocation.lat,
-                lng: currentLocation.lng,
-            }} label="Plane" onClick={() => {
-                console.log('clicked')
-            }}></Marker3D>
+            {/* <AdvancedMarker3D
+            position={currentLocation}
+            title={"Plane"}
+            color="#9C27B0"
+            elevated={true}
+            altitude={30} // Height in meters
+            scale={0.01} // Marker size
+            glyph={new URL("http://localhost:3000/plane.svg")} // Marker icon
+            showAnchorLine={true} // Show/hide the vertical line
+            anchorLineWidth={2} // Line thickness
+          /> */}
+
+            {/* <gmp-model-3d position="lat,lng,altitude" altitude-mode="string" orientation="heading,tilt,roll" scale="x,y,z|number" src="string"></gmp-model-3d> */}
+
+            {/* <gm-model-3d position={`${currentLocation.lat},${currentLocation.lng},10000`} altitude-mode="RELATIVE_TO_GROUND" orientation="0,0,0" scale="200" src="http://localhost:3000/plane.glb"></gm-model-3d> */}
+
+            <Model3D position={{ lat: currentLocation.lat, lng: currentLocation.lng, altitude: 1000 }} altitudeMode="RELATIVE_TO_GROUND" orientation={
+                {
+                    heading: 0,
+                    tilt: 0,
+                    roll: 0
+                }
+            } scale={1} src="http://localhost:3000/plane.glb"></Model3D>
+
             <Polyline3D altitudeMode={'RELATIVE_TO_GROUND'} coordinates={[
                 { lat: plane.origin.location.latitude, lng: plane.origin.location.longitude, altitude: 10000 },
                 { lat: currentLocation.lat, lng: currentLocation.lng, altitude: 60000 },

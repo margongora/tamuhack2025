@@ -16,6 +16,7 @@ import { getAllAirports, getAllFlights } from '@/lib/client/utils';
 import { AllAirportsOutput } from './api/getAirports/_schema';
 import { AllFlightsOutput } from './api/getFlights/_schema';
 import Airplanes from '@/components/map-stuff/airplanes';
+import FlightList from '@/components/FlightList';
 
 export default function Home() {
 
@@ -84,7 +85,6 @@ export default function Home() {
   return (
     <div className="relative w-screen h-screen dark overflow-hidden">
       <div className='dark absolute top-0 left-0 p-4 z-10'>
-        {date !== '' && (<p className='text-white'>{date}</p>)}
         <Button onPress={onOpen}>Input Info</Button>
         <Drawer backdrop='blur' isOpen={isOpen} onOpenChange={onOpenChange} placement="left">
           <DrawerContent className='bg-gray-400'>
@@ -109,16 +109,17 @@ export default function Home() {
             )}
           </DrawerContent>
         </Drawer>
+        <FlightList flights={flights as []} />
       </div>
       <Map3D>
-        <Polyline3D altitudeMode={'RELATIVE_TO_GROUND'} coordinates={[
+        {/* <Polyline3D altitudeMode={'RELATIVE_TO_GROUND'} coordinates={[
           { lat: 32.7767, lng: -96.7970, altitude: 30000 },
           { lat: 40.7555, lng: -73.9739, altitude: 30000 },
         ]}
           strokeColor="#500000" strokeWidth={10}
           geodesic
           drawsOccludedSegments
-        ></Polyline3D>
+        ></Polyline3D> */}
         {airports.map((airport, i) =>
           <Marker3D key={i} position={{ lat: airport.location.latitude, lng: airport.location.longitude }} onClick={() => {
             console.log('clicked')
