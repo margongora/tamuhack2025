@@ -147,7 +147,8 @@ const haversine = (givenLocation: Coords, currLocation: Coords) => {
 export default function Home() {
 
   const {
-    map3DElement
+    map3DElement,
+    map3dRef
   } = useMap3D();
 
   const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
@@ -234,15 +235,15 @@ export default function Home() {
     // interval to increment timeOfDay ever 10 milliseconds
     const timeout = setTimeout(() => {
       setTimeOfDay((timeOfDay) => {
-        return timeOfDay + 1000;
+        return timeOfDay + 100;
       });
-    }, 1000);
+    }, 100);
 
     return () => {
       clearTimeout(timeout);
     }
 
-  }, [timeOfDay, flightList]);
+  }, [timeOfDay]);
 
 
   function getLeadingZero(num: number) {
@@ -322,13 +323,21 @@ export default function Home() {
           }}></Marker3D>
         )}
 
-        {flightList && flightList.map((flight, i) =>
+        {flightList && flightList.map((flight, i) => {
+
+          const parsedDate = getDatePlusMilliseconds(date, timeOfDay);
+
+          // if the flight is not in the air, don't show it
+          if (parsedDate < new Date(flight.departureTime) || parsedDate > new Date(flight.arrivalTime)) {
+            return null;
+          }
+
           // get date from "date" variable and timeOfDay from "timeOfDay" variable
-          <Airplanes time={
+          return <Airplanes time={
             // get the date from the date variable and add the timeOfDay variable of milliseconds to it
             getDatePlusMilliseconds(date, timeOfDay)
           } key={i} plane={flight}></Airplanes>
-        )}
+        })}
       </Map3D>
     </div>
   );
