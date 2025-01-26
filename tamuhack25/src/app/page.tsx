@@ -148,7 +148,7 @@ export default function Home() {
                 <DrawerHeader>Input what date and airport from which you&apos;d like to leave.</DrawerHeader>
                 <DrawerBody>
                   <Form onSubmit={onSubmit}>
-                    <DatePicker name='leaveDate' defaultValue={null} className='text-black' />
+                    <DatePicker name='leaveDate' defaultValue={parseDate(date)} className='text-black' />
                     <Select name='leaveAirport' items={airportCodes} defaultSelectedKeys={[airport]}>
                       {airportCodes.map((airport) => (
                         <SelectItem key={airport.key}>{airport.label}</SelectItem>
