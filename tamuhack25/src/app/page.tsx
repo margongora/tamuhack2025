@@ -33,6 +33,7 @@ import { i } from 'framer-motion/client';
 import { set } from 'zod';
 import { AdvancedMarker3D } from '@/components/map-stuff/advanced-pin';
 import { SparkleIcon, SparklesIcon, XIcon } from 'lucide-react';
+import Markdown from 'react-markdown';
 
 interface Coords {
   longitude: number,
@@ -436,7 +437,7 @@ export default function Home() {
 
           {elaboration != "" && <div className='bg-gray-400/50 backdrop-blur-sm p-8 rounded-lg mt-6'>
             <div className='flex gap-2 flex-col'>
-              <p>{elaboration}</p>
+              <Markdown>{elaboration}</Markdown>
             </div>
 
           </div>}
