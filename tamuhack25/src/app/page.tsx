@@ -51,14 +51,107 @@ const airportCodes = [
   { key: 'tpa', label: 'TPA' }
 ]
 
+const airportCoords = [
+  {
+    latitude: 33.6404,
+    longitude: -84.4198
+  }, {
+    latitude: 42.3656,
+    longitude: -71.0096
+  }, {
+    latitude: 39.1774,
+    longitude: -76.6684
+  }, {
+    latitude: 35.2138,
+    longitude: -80.943
+  }, {
+    latitude: 39.8493,
+    longitude: -104.6738
+  }, {
+    latitude: 32.8998,
+    longitude: -97.0403
+  }, {
+    latitude: 36.1043,
+    longitude: -79.935
+  }, {
+    latitude: 40.6895,
+    longitude: -74.1745
+  }, {
+    latitude: 26.0742,
+    longitude: -80.1506
+  }, {
+    latitude: 36.0726,
+    longitude: -79.792
+  }, {
+    latitude: 29.9902,
+    longitude: -95.3368
+  }, {
+    latitude: 40.6413,
+    longitude: -73.7781
+  }, {
+    latitude: 36.08601,
+    longitude: -115.1539
+  }, {
+    latitude: 33.9416,
+    longitude: -118.4085
+  }, {
+    latitude: 28.4179,
+    longitude: -81.3041
+  }, {
+    latitude: 25.7969,
+    longitude: -80.2762
+  }, {
+    latitude: 44.8848,
+    longitude: -93.2223
+  }, {
+    latitude: 41.9742,
+    longitude: -87.9073
+  }, {
+    latitude: 39.8729,
+    longitude: -75.2437
+  }, {
+    latitude: 36.1043,
+    longitude: -79.935
+  }, {
+    latitude: 37.6213,
+    longitude: -122.379
+  }, {
+    latitude: 47.4435,
+    longitude: -122.3016
+  }, {
+    latitude: 37.6213,
+    longitude: -122.379
+  }, {
+    latitude: 40.7899,
+    longitude: -111.9791
+  }, {
+    latitude: 36.1043,
+    longitude: -79.935
+  }
+]
+
+interface Coords {
+  longitude: number,
+  latitude: number
+}
+
+const haversine = (givenLocation: Coords, currLocation: Coords) => {
+  const R = 6371;
+
+  const latDiff = (currLocation.latitude - givenLocation.latitude) * (Math.PI / 180);
+  const longDiff = (currLocation.longitude - givenLocation.longitude) * (Math.PI / 180);
+
+  return 2 * R * Math.asin(Math.sqrt((1 - Math.cos(latDiff) + Math.cos(currLocation.latitude * (Math.PI / 180)) * Math.cos(givenLocation.latitude * (Math.PI / 180)) * (1 - Math.cos(longDiff))) / 2))
+}
+
 export default function Home() {
 
   const {
     map3DElement
   } = useMap3D();
 
-  const [airport, setAirport] = useState<string>('dfw');
   const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [airport, setAirport] = useState<string>('');
   const [flights, setFlights] = useState<Flight[] | undefined>(undefined);
   const [flightList, setFlightList] = useState<Flight[] | undefined>(undefined);
   const [airports, setAirports] = useState<AllAirportsOutput | undefined>(undefined);
@@ -90,6 +183,31 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
+
+    if (navigator.geolocation && airport == '') {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          let closestIndex = 0;
+          let distance = Infinity;
+          airportCoords.forEach((coords, idx) => {
+            const dist = haversine(coords, { latitude, longitude });
+            console.log(`${idx}: ${dist}`)
+
+            if (dist < distance) {
+              distance = dist;
+              closestIndex = idx;
+            }
+          });
+          console.log(airportCodes[closestIndex].key)
+          setAirport(airportCodes[closestIndex].key);
+        },
+        () => {
+          setLocation({ latitude: 37.7749, longitude: -122.4194 });
+        }
+      );
+    }
+
     if (date !== '') {
       setLoaded(false);
       fetch(`https://flight-engine-rp1w.onrender.com/flights?date=${date}&origin=${airport.toUpperCase()}`).then(async (res) => {
@@ -153,7 +271,7 @@ export default function Home() {
                 <DrawerHeader>Input what date and airport from which you&apos;d like to leave.</DrawerHeader>
                 <DrawerBody>
                   <Form onSubmit={onSubmit}>
-                    <DatePicker name='leaveDate' defaultValue={null} className='text-black' />
+                    <DatePicker name='leaveDate' defaultValue={parseDate(date)} className='text-black' />
                     <Select name='leaveAirport' items={airportCodes} defaultSelectedKeys={[airport]}>
                       {airportCodes.map((airport) => (
                         <SelectItem key={airport.key}>{airport.label}</SelectItem>
@@ -204,8 +322,8 @@ export default function Home() {
           }}></Marker3D>
         )}
 
-        {flights && flights.slice(0,50).map((flight, i) =>
-        // get date from "date" variable and timeOfDay from "timeOfDay" variable
+        {flights && flights.slice(0, 50).map((flight, i) =>
+          // get date from "date" variable and timeOfDay from "timeOfDay" variable
           <Airplanes time={
             // get the date from the date variable and add the timeOfDay variable of milliseconds to it
             getDatePlusMilliseconds(date, timeOfDay)
