@@ -302,9 +302,9 @@ export default function Home() {
         {new Date(chosenFlight.departureTime).getTime() - getDatePlusMilliseconds(date, timeOfDay).getTime()} <br />
       </div>} */}
 
-      <div className='absolute bottom-0 bg-white align-middle z-20'>
+      {/* <div className='absolute bottom-0 bg-white align-middle z-20'>
         Test
-      </div>
+      </div> */}
 
       <div className='dark absolute top-0 left-0 p-4 z-10'>
         <Button onPress={onOpen1}>Input Info</Button>
