@@ -15,6 +15,8 @@ import { parseDate } from '@internationalized/date';
 import { Map3D, Marker3D, Polyline3D } from "@/components/map-3d";
 import { useEffect, useState } from 'react';
 import FlightList from '@/components/FlightList';
+import { TypeOf } from 'zod';
+import { Flight } from './api/getFlights/_schema';
 
 const airportCodes = [
   { key: 'atl', label: 'ATL' },
@@ -48,7 +50,7 @@ export default function Home() {
 
   const [airport, setAirport] = useState<string>('dfw');
   const [date, setDate] = useState<string>('');
-  const [flights, setFlights] = useState([]);
+  const [flights, setFlights] = useState<Flight[] | undefined>(undefined);
   const [loaded, setLoaded] = useState<boolean>(false);
 
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -100,7 +102,7 @@ export default function Home() {
             )}
           </DrawerContent>
         </Drawer>
-        <FlightList airport={airport} date={date} flights={flights as []} loading={loaded} />
+        <FlightList airport={airport} date={date} flights={flights} loading={loaded} />
       </div>
       <Map3D>
         <Polyline3D altitudeMode={'RELATIVE_TO_GROUND'} coordinates={[
