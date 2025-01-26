@@ -89,7 +89,7 @@ export type Orientation3D = {
   roll: number;
 }
 
-export type  Model3DProps = {
+export type Model3DProps = {
   position: google.maps.LatLngAltitudeLiteral;
   altitudeMode: string;
   orientation: Orientation3D;
@@ -146,6 +146,17 @@ export const Marker3D = forwardRef(
       });
     }, []);
 
+    useEffect(() => {
+      // add event listener for click event
+      if (!marker3DElement) return;
+
+      marker3DElement.addEventListener('gmp-click', props.onClick);
+
+      return () => {
+        marker3DElement.removeEventListener('gmp-click', props.onClick);
+      }
+    }, [marker3DElement, props.onClick]);
+
     const [customElementsReady, setCustomElementsReady] = useState(false);
 
     useImperativeHandle(
@@ -171,7 +182,7 @@ export const Map3D = forwardRef(
   ) => {
     useMapsLibrary("maps3d");
 
-    const { map3DElement, map3dRef, setCamProps  } = useMap3D();
+    const { map3DElement, map3dRef, setCamProps } = useMap3D();
 
     useMap3DCameraEvents(map3DElement, (p) => {
       if (setCamProps) setCamProps(p);

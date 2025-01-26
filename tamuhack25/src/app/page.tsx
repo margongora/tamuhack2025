@@ -107,14 +107,31 @@ export default function Home() {
     }
   }, [date, airport])
 
+  const [manualChange, setManualChange] = useState<boolean>(false);
+
   useEffect(() => {
+
+    if (manualChange) {
+      return;
+    }
+
     // interval to increment timeOfDay every second
     const interval = setInterval(() => {
       setTimeOfDay((timeOfDay) => {
         return (timeOfDay + 0.1) % 86400;
       });
     }, 100);
-  }, []);
+
+    return () => {
+      clearInterval(interval);
+    }
+
+  }, [manualChange]);
+
+  function manualChangeTimeOfDay(time: number) {
+    setTimeOfDay(time);
+    setManualChange(!manualChange);
+  }
 
   function getLeadingZero(num: number) {
     if (num < 10) {
@@ -147,7 +164,7 @@ export default function Home() {
                       maxValue={86400}
                       step={1}
                       value={timeOfDay}
-                      onChange={(e) => setTimeOfDay(e as number)}
+                      onChange={(e) => manualChangeTimeOfDay(e as number)}
                     />
                   </Form>
                 </DrawerBody>
@@ -172,7 +189,7 @@ export default function Home() {
           }}></Marker3D>
         )}
 
-        {flights && flights.slice(0,100).map((flight, i) =>
+        {flights && flights.slice(0,50).map((flight, i) =>
         // get date from "date" variable and timeOfDay from "timeOfDay" variable
           <Airplanes time={
             new Date(`${date}T${getLeadingZero(Math.floor(timeOfDay / 3600))}:${getLeadingZero(Math.floor((timeOfDay % 3600) / 60))}:${getLeadingZero(timeOfDay % 60)}`)
