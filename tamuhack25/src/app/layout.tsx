@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import MapContextProvider from "@/context/map-context-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,7 +28,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <MapContextProvider>
+          {children}
+        </MapContextProvider>
       </body>
       <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAOsk3zgPK7ZQWWWa7VTjg2zvU6WMla27U&v=alpha&libraries=maps3d"></script>
     </html>

@@ -6,7 +6,7 @@ export const allFlightsInputSchema = z.object({
 
 export type AllFlightsInput = z.infer<typeof allFlightsInputSchema>;
 
-export const allFlightsOutputSchema = z.array(z.object({
+export const flightSchema = z.object({
     flightNumber: z.string(),
     origin: z.object({
         code: z.string(),
@@ -43,6 +43,10 @@ export const allFlightsOutputSchema = z.array(z.object({
         }),
         speed: z.number(),
     }),
-}));
+});
+
+export type Flight = z.infer<typeof flightSchema>;
+
+export const allFlightsOutputSchema = z.array(flightSchema);
 
 export type AllFlightsOutput = z.infer<typeof allFlightsOutputSchema>;

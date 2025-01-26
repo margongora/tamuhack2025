@@ -44,6 +44,8 @@ export type Polyline3DProps = {
 export type Marker3DProps = {
   altitudeMode?: string;
   position: google.maps.LatLngLiteral;
+  onClick: (event: any) => void;
+  label?: string;
 }
 
 export const Polyline3D = forwardRef(
@@ -56,7 +58,7 @@ export const Polyline3D = forwardRef(
     const [polyline3DElement, polyline3dRef] = useCallbackRef<google.maps.maps3d.Polyline3DElement>();
 
     useEffect(() => {
-      customElements.whenDefined('gmp-map-3d').then(() => {
+      customElements.whenDefined('gmp-polyline-3d').then(() => {
         setCustomElementsReady(true);
       });
     }, []);
@@ -69,7 +71,7 @@ export const Polyline3D = forwardRef(
     >(forwardedRef, () => polyline3DElement, [polyline3DElement]);
 
     if (!customElementsReady) return null;
-    
+
     return (
       <>
         <gmp-polyline-3d
@@ -84,29 +86,26 @@ export const Polyline3D = forwardRef(
 );
 
 export const Marker3D = (
-    props: Marker3DProps,
-  ) => {
-    useMapsLibrary('maps3d');
+  props: Marker3DProps,
+) => {
+  useMapsLibrary('maps3d');
 
-    useEffect(() => {
-      customElements.whenDefined('gmp-marker-3d').then(() => {
-        setCustomElementsReady(true);
-      });
-    }, []);
+  useEffect(() => {
+    customElements.whenDefined('gmp-marker-3d').then(() => {
+      setCustomElementsReady(true);
+    });
+  }, []);
 
-    const [customElementsReady, setCustomElementsReady] = useState(false);
+  const [customElementsReady, setCustomElementsReady] = useState(false);
 
-    if (!customElementsReady) return null;
-    
-    return (
-      <>
-        <gmp-marker-3d
-        {...props}
-        >          
-        </gmp-marker-3d>
-      </>
-    )
-  };
+  if (!customElementsReady) return null;
+
+  return (
+    <>
+      <gmp-marker-3d-interactive {...props} />
+    </>
+  )
+};
 
 export const Map3D = forwardRef(
   (
@@ -131,6 +130,13 @@ export const Map3D = forwardRef(
       customElements.whenDefined("gmp-map-3d").then(() => {
         setCustomElementsReady(true);
       });
+    }, []);
+
+    const { center, heading, tilt, range, roll, children, ...map3dOptions } = props;
+
+    useDeepCompareEffect(() => {
+      if (!map3DElement) return;
+
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (position) => {
@@ -140,18 +146,24 @@ export const Map3D = forwardRef(
               lng: longitude,
               altitude: 15000,
             });
+
+            // create a marker for the user's location
+            const marker = new google.maps.maps3d.Marker3DInteractiveElement({
+              position: { lat: latitude, lng: longitude, altitude: 0 },
+            });
+
+            marker.addEventListener("gmp-click", (event: any) => {
+              console.log("Marker clicked:", event.target.position);
+            });
+
+            map3DElement?.append(marker);
+
           },
           () => {
             setUserLocation({ lat: 37.7749, lng: -122.4194, altitude: 15000 });
           }
         );
       }
-    }, []);
-
-    const { center, heading, tilt, range, roll, children, ...map3dOptions } = props;
-
-    useDeepCompareEffect(() => {
-      if (!map3DElement) return;
 
       Object.assign(map3DElement, map3dOptions);
 
@@ -159,7 +171,7 @@ export const Map3D = forwardRef(
         .then((flights) => {
 
           if (!map3DElement || !flights) return;
-          
+
           flights.forEach((flight) => {
             const position = {
               lat: flight.location.latitude,
@@ -169,6 +181,7 @@ export const Map3D = forwardRef(
             //console.log("position:",position)
             const marker = new google.maps.maps3d.Marker3DInteractiveElement({
               position: position,
+              label: flight.code,
             });
 
             marker.addEventListener("gmp-click", (event: any) => {
@@ -200,7 +213,7 @@ export const Map3D = forwardRef(
           heading={heading}
           tilt={tilt}
           roll={roll}>
-            {props.children}
+          {props.children}
         </gmp-map-3d>
 
       </>

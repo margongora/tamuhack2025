@@ -39,7 +39,7 @@ export async function getAllFlights(date: string) {
 
         // check if the response is ok
         if (!response.ok) {
-            return new Response("API Error", { status: response.status });
+            throw new Error("API Error");
         }
 
         // parse the response as JSON
