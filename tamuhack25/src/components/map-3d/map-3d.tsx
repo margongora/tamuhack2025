@@ -114,6 +114,8 @@ export const Model3D = forwardRef(
       });
     }, []);
 
+
+    
     const [customElementsReady, setCustomElementsReady] = useState(false);
 
     useImperativeHandle<

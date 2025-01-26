@@ -31,25 +31,6 @@ export default function Airplanes({
         return Math.min(Math.max((distance / 1000), minMax[0]), minMax[1]);
     }
 
-    /*
-    private double angleFromCoordinate(double lat1, double long1, double lat2,
-        double long2) {
-
-    double dLon = (long2 - long1);
-
-    double y = Math.sin(dLon) * Math.cos(lat2);
-    double x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1)
-            * Math.cos(lat2) * Math.cos(dLon);
-
-    double brng = Math.atan2(y, x);
-
-    brng = Math.toDegrees(brng);
-    brng = (brng + 360) % 360;
-    brng = 360 - brng; // count degrees counter-clockwise - remove to make clockwise
-
-    return brng;
-} */
-
     const getHeading = (lat1: number, long1: number, lat2: number, long2: number) => {
         // convert lat and long to radians
         const lat1Rad = lat1 * Math.PI / 180;
@@ -123,10 +104,6 @@ export default function Airplanes({
         }
 
         setCurrentLocation(currentLocation);
-
-        return () => {
-            setCurrentLocation(null);
-        }
     }, [plane, time]);
 
     const getTrailCoordinates = () => {
@@ -158,9 +135,14 @@ export default function Airplanes({
         return trailCoordinates;
     }
 
+    // useEffect(() => {
+    //     if (ref.current) {
+    //         ref.current.position = { lat: currentLocation?.lat ?? 0, lng: currentLocation?.lng ?? 0, altitude: 100 };
+    //     }
+    // }, [currentLocation])
+
     return (<>
-        {currentLocation ? <>
-            {/* <AdvancedMarker3D
+        {/* <AdvancedMarker3D
             position={currentLocation}
             title={"Plane"}
             color="#9C27B0"
@@ -172,45 +154,44 @@ export default function Airplanes({
             anchorLineWidth={2} // Line thickness
           /> */}
 
-            {/* <gmp-model-3d position="lat,lng,altitude" altitude-mode="string" orientation="heading,tilt,roll" scale="x,y,z|number" src="string"></gmp-model-3d> */}
+        {/* <gmp-model-3d position="lat,lng,altitude" altitude-mode="string" orientation="heading,tilt,roll" scale="x,y,z|number" src="string"></gmp-model-3d> */}
 
-            {/* <gm-model-3d position={`${currentLocation.lat},${currentLocation.lng},10000`} altitude-mode="RELATIVE_TO_GROUND" orientation="0,0,0" scale="200" src="http://localhost:3000/plane.glb"></gm-model-3d> */}
+        {/* <gm-model-3d position={`${currentLocation.lat},${currentLocation.lng},10000`} altitude-mode="RELATIVE_TO_GROUND" orientation="0,0,0" scale="200" src="http://localhost:3000/plane.glb"></gm-model-3d> */}
 
-            <Model3D position={{ lat: currentLocation.lat, lng: currentLocation.lng, altitude: 100 }} altitudeMode="RELATIVE_TO_GROUND" orientation={
-                {
-                    heading: 90 + getHeading(plane.origin.location.latitude, plane.origin.location.longitude, plane.destination.location.latitude, plane.destination.location.longitude),
-                    // heading: 180,
-                    tilt: -90,
-                    roll: 90
-                }
+        <Model3D position={{ lat: currentLocation?.lat ?? 0, lng: currentLocation?.lng ?? 0, altitude: currentLocation ? 100 : -100 }} altitudeMode="RELATIVE_TO_GROUND" orientation={
+            {
+                heading: 90 + getHeading(plane.origin.location.latitude, plane.origin.location.longitude, plane.destination.location.latitude, plane.destination.location.longitude),
+                // heading: 180,
+                tilt: -90,
+                roll: 90
             }
-                onClick={() => {
-                    console.log('clicked')
-                }}
+        }
+            onClick={() => {
+                console.log('clicked')
+            }}
 
-                scale={getScale()} src="http://localhost:3000/plane.glb"></Model3D>
+            scale={getScale()} src="http://localhost:3000/plane.glb"></Model3D>
 
-            <Polyline3D altitudeMode={'RELATIVE_TO_GROUND'} coordinates={[
-                { lat: plane.origin.location.latitude, lng: plane.origin.location.longitude, altitude: 1000 },
-                { lat: currentLocation.lat, lng: currentLocation.lng, altitude: 1000 },
-                { lat: plane.destination.location.latitude, lng: plane.destination.location.longitude, altitude: 1000 },
-            ]}
-                strokeColor="#BBBBBB55" strokeWidth={5}
-                geodesic
-                drawsOccludedSegments
-            ></Polyline3D>
+        <Polyline3D altitudeMode={'RELATIVE_TO_GROUND'} coordinates={[
+            { lat: plane.origin.location.latitude, lng: plane.origin.location.longitude, altitude: 1000 },
+            { lat: currentLocation?.lat ?? 0, lng: currentLocation?.lng ?? 0, altitude: 1000 },
+            { lat: plane.destination.location.latitude, lng: plane.destination.location.longitude, altitude: 1000 },
+        ]}
+            strokeColor={currentLocation ? "#BBBBBB55" : "transparent"} strokeWidth={currentLocation ? 5 : 0}
+            geodesic
+            drawsOccludedSegments
+        ></Polyline3D>
 
-            {/* Create short trail 10% of the way */}
-            <Polyline3D altitudeMode={'RELATIVE_TO_GROUND'} coordinates={[
-                { lat: plane.origin.location.latitude, lng: plane.origin.location.longitude, altitude: 100 },
-                getTrailCoordinates(),
-            ]}
-                strokeColor="#FFFFFF77" strokeWidth={5}
-                geodesic
-                drawsOccludedSegments
-            ></Polyline3D>
-                
-        </> : null}
+        {/* Create short trail 10% of the way */}
+        <Polyline3D altitudeMode={'RELATIVE_TO_GROUND'} coordinates={[
+            { lat: plane.origin.location.latitude, lng: plane.origin.location.longitude, altitude: 100 },
+            getTrailCoordinates(),
+        ]}
+            strokeColor={currentLocation ? "#FFFFFF77" : "transparent"} strokeWidth={currentLocation ? 5 : 0}
+            geodesic
+            drawsOccludedSegments
+        ></Polyline3D>
+
     </>
     )
 
