@@ -112,16 +112,15 @@ export default function Home() {
     }
   }, [date, airport])
 
-  const [manualChange, setManualChange] = useState<boolean>(false);
 
   useEffect(() => {
 
-    // interval to increment timeOfDay every second
+    // interval to increment timeOfDay ever 10 milliseconds
     const timeout = setTimeout(() => {
       setTimeOfDay((timeOfDay) => {
-        return (timeOfDay + 0.1) % 86400;
+        return timeOfDay + 10;
       });
-    }, 100);
+    }, 10);
 
     return () => {
       clearTimeout(timeout);
@@ -135,6 +134,12 @@ export default function Home() {
       return `0${num}`;
     }
     return num;
+  }
+
+  function getDatePlusMilliseconds(date: string, milliseconds: number) {
+    const d = new Date(date);
+    d.setMilliseconds(milliseconds);
+    return d;
   }
 
   return (
@@ -157,9 +162,9 @@ export default function Home() {
                     <Button type='submit' onPress={onClose}>Submit</Button>
                     <Slider
                       name='timeOfDay'
-                      minValue={0}
-                      maxValue={86400}
-                      step={1}
+                      minValue={0} // milliseconds since midnight
+                      maxValue={86400000}
+                      step={1000}
                       value={timeOfDay}
                       onChange={(e) => setTimeOfDay(e as number)}
                     />
@@ -202,7 +207,8 @@ export default function Home() {
         {flights && flights.slice(0,50).map((flight, i) =>
         // get date from "date" variable and timeOfDay from "timeOfDay" variable
           <Airplanes time={
-            new Date(`${date}T${getLeadingZero(Math.floor(timeOfDay / 3600))}:${getLeadingZero(Math.floor((timeOfDay % 3600) / 60))}:${getLeadingZero(timeOfDay % 60)}`)
+            // get the date from the date variable and add the timeOfDay variable of milliseconds to it
+            getDatePlusMilliseconds(date, timeOfDay)
           } key={i} plane={flight}></Airplanes>
         )}
       </Map3D>
