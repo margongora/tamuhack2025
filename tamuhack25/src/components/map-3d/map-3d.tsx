@@ -80,6 +80,7 @@ export const Polyline3D = forwardRef(
 
     return (
       <>
+        { /* @ts-ignore */}
         <gmp-polyline-3d ref={polyline3dRef} {...props}></gmp-polyline-3d>
       </>
     )
@@ -104,11 +105,12 @@ export type Model3DProps = {
 
 export const Model3D = forwardRef(
   (
-    props: Model3DProps,
+    props: Model3DProps, //@ts-ignore
     forwardedRef: ForwardedRef<google.maps.maps3d.Model3DElement | null>
   ) => {
     useMapsLibrary('maps3d');
 
+    //@ts-ignore
     const [model3DElement, model3dRef] = useCallbackRef<google.maps.maps3d.Model3DElement>();
 
     useEffect(() => {
@@ -121,8 +123,8 @@ export const Model3D = forwardRef(
 
     const [customElementsReady, setCustomElementsReady] = useState(false);
 
-    useImperativeHandle<
-      google.maps.maps3d.Model3DElement | null,
+    useImperativeHandle< // @ts-ignore
+      google.maps.maps3d.Model3DElement | null, //@ts-ignore
       google.maps.maps3d.Model3DElement | null
     >(forwardedRef, () => model3DElement, [model3DElement]);
 
@@ -130,6 +132,7 @@ export const Model3D = forwardRef(
 
     return (
       <>
+        { /* @ts-ignore */}
         <gmp-model-3d ref={model3dRef} {...props}></gmp-model-3d>
         {/* <Marker3D position={props.position} onClick={props.onClick ?? () => {}} >}></Marker3D> */}
       </>
@@ -193,6 +196,7 @@ export const Marker3D = forwardRef(
 
     return (
       <>
+        { /* @ts-ignore */}
         <gmp-marker-3d-interactive ref={marker3dRef} {...props}></gmp-marker-3d-interactive>
       </>
     )
@@ -339,6 +343,7 @@ export const Map3D = forwardRef(
 
     return (
       <>
+        { /* @ts-ignore */}
         <gmp-map-3d
           ref={map3dRef}
           center={userLocation}
@@ -346,7 +351,7 @@ export const Map3D = forwardRef(
           heading={heading}
           tilt={tilt}
           roll={roll}>
-          {props.children}
+          {props.children} {/* @ts-ignore */}
         </gmp-map-3d>
 
       </>
