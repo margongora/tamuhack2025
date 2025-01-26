@@ -12,7 +12,7 @@ import {
   SelectItem,
   useDisclosure,
 } from '@heroui/react'
-import { parseDate } from '@internationalized/date'; 
+import { parseDate } from '@internationalized/date';
 import { Map3D, Map3DCameraProps, Marker3D, Polyline3D } from "@/components/map-3d";
 import { useEffect, useRef, useState } from 'react';
 import { getAllAirports, getAllFlights } from '@/lib/client/utils';
@@ -20,7 +20,6 @@ import { AllAirportsOutput } from './api/getAirports/_schema';
 import { AllFlightsOutput } from './api/getFlights/_schema';
 import Airplanes from '@/components/map-stuff/airplanes';
 import FlightList from '@/components/FlightList';
-import { TypeOf } from 'zod';
 import { Flight } from './api/getFlights/_schema';
 
 const airportCodes = [

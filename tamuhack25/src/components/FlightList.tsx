@@ -41,7 +41,8 @@ const Destination = ({ destination, flights }: { destination: string, flights: F
         const arrivalTime = DateTime.fromISO(flight.arrivalTime).toLocaleString({ timeZone: flight.destination.timezone, ...timeFormat });
 
         return (
-          <Radio key={flightNumber + i} value={flightNumber}>
+          <Radio key={flightNumber} value={flightNumber}
+            description={`Flight no. ${flightNumber} - ${flight.duration.locale}`}>
             <strong>{departureTime}</strong> to <strong>{arrivalTime}</strong>
           </Radio>);
       })}
@@ -49,7 +50,7 @@ const Destination = ({ destination, flights }: { destination: string, flights: F
   </div >
 }
 
-const FlightList = ({ airport, date, flights, loading }: { airport: string, date: string, flights?: Flight[], loading: boolean}) => {
+const FlightList = ({ airport, date, flights, loading }: { airport: string, date: string, flights?: Flight[], loading: boolean }) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
