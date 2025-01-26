@@ -119,7 +119,23 @@ export default function Home() {
     e.preventDefault();
 
     const data = Object.fromEntries(new FormData(e.currentTarget));
-    setChosenFlight(flightList?.filter((flight) => flight['flightNumber'] == data['chosenFlight'])[0])
+    const newFlight = flightList?.filter((flight) => flight['flightNumber'] == data['chosenFlight'])[0];
+    setChosenFlight(newFlight);
+
+    map3DElement?.flyCameraTo({
+      endCamera: {
+        center: {
+          lat: newFlight!.destination.location.latitude,
+          lng: newFlight!.destination.location.longitude,
+          altitude: 1000
+        },
+        tilt: 45,
+        heading: 0,
+        range: 10000
+      },
+      durationMillis: 2000
+    });
+
   }
 
   const handleChosenReset = () => {
@@ -182,16 +198,16 @@ export default function Home() {
                 const { latitude, longitude } = position.coords;
                 let closestIndex = 0;
                 let distance = Infinity;
- 
+
                 airportCoords.forEach((coords, idx) => {
                   const dist = haversine(coords, { latitude, longitude });
- 
+
                   if (dist < distance) {
                     distance = dist;
                     closestIndex = idx;
                   }
                 });
- 
+
                 setAirport(airportCodes[closestIndex]?.key || '');
               },
               () => {
@@ -238,12 +254,12 @@ export default function Home() {
   }, [timeOfDay]);
 
 
-  function getLeadingZero(num: number) {
-    if (num < 10) {
-      return `0${num}`;
-    }
-    return num;
-  }
+  // function getLeadingZero(num: number) {
+  //   if (num < 10) {
+  //     return `0${num}`;
+  //   }
+  //   return num;
+  // }
 
   function getDatePlusMilliseconds(date: string, milliseconds: number) {
     const d = new Date(date);
