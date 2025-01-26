@@ -22,3 +22,7 @@ body {
 .vAygCK-api-load-alpha-banner {
   display: none;
 }
+
+gmp-map-3d {
+  outline: none;
+}

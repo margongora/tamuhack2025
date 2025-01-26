@@ -242,7 +242,7 @@ export default function Home() {
       clearTimeout(timeout);
     }
 
-  }, [timeOfDay]);
+  }, [timeOfDay, flightList]);
 
 
   function getLeadingZero(num: number) {
