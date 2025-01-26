@@ -1,5 +1,7 @@
 'use client'
 import {
+    Accordion,
+  AccordionItem,
   Button,
   Drawer,
   DrawerBody,
@@ -12,6 +14,40 @@ import {
   useDisclosure
 } from '@heroui/react'
 
+import {DateTime, DateTimeFormatOptions} from "luxon";
+
+const Destination = ({destination, flights}) => {
+    const cityName = flights[0]["destination"]["city"];
+    const numFlights = flights.length;
+    
+    return <div className="p-2 bg-gray-300 rounded-md w-full flex flex-col">
+        <span><strong>{cityName}</strong> ({destination})</span>
+        <details>
+            <summary>{numFlights} flights available</summary>
+            <RadioGroup label='Please select a flight.' name='chosenFlight'>
+                {flights.map((flight, idx: number) => {
+                const flightNumber = flight["flightNumber"] as string;
+
+                const timeFormat: DateTimeFormatOptions = {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    timeZoneName: 'shortGeneric'
+                }
+
+                const departureTime = DateTime.fromISO(flight["departureTime"]);
+                const arrivalTime = DateTime.fromISO(flight["arrivalTime"]);
+
+
+                return (
+                    <Radio key={idx} value={flightNumber}>
+                        <strong>{departureTime.toLocaleString({timeZone: flight["origin"]["timezone"], ...timeFormat})}</strong> to <strong>{arrivalTime.toLocaleString({timeZone: flight["destination"]["timezone"], ...timeFormat})}</strong>
+                    </Radio>);
+                })}
+            </RadioGroup>
+        </details>
+    </div>
+}
+
 const FlightList = ({ flights }) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
@@ -20,7 +56,9 @@ const FlightList = ({ flights }) => {
 
     const data = Object.fromEntries(new FormData(e.currentTarget));
     console.log(flights.filter((flight) => flight['flightNumber'] == data['chosenFlight']))
-  }
+    }
+
+    const destinations: Record<any, any> = Object.groupBy(flights, (item: any) => item["destination"]["code"]);
 
   return (
     <div>
@@ -33,12 +71,18 @@ const FlightList = ({ flights }) => {
               <DrawerBody>
                 {flights.length === 0 ? (<p>Please select a date to leave first.</p>) : (
                   <Form onSubmit={handleSubmit} id='selectFlight'>
-                    <RadioGroup label='Please select a flight.' name='chosenFlight'>
+                    {/*<RadioGroup label='Please select a flight.' name='chosenFlight'>
                       {flights.map((flight, idx: number) => {
                         const flightNumber = flight["flightNumber"] as string;
                         return (<Radio key={idx} value={flightNumber}>Flight {flightNumber} to {flight["destination"]["city"]}</Radio>)
                       })}
-                    </RadioGroup>
+                    </RadioGroup>*/}
+                    {
+                        
+                        Object.entries(destinations).map((entry, idx) => {
+                            return <Destination destination={entry[0]} flights={entry[1]} key={idx} />;
+                        })
+                    }
 
                   </Form>
                 )}
