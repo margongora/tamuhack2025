@@ -9,8 +9,9 @@ import {
   Form,
   Select,
   SelectItem,
-  useDisclosure
+  useDisclosure,
 } from '@heroui/react'
+import { parseDate } from '@internationalized/date'; 
 import { Map3D, Marker3D, Polyline3D } from "@/components/map-3d";
 import { useEffect, useState } from 'react';
 import FlightList from '@/components/FlightList';
@@ -86,7 +87,7 @@ export default function Home() {
                 <DrawerHeader>Input what date and airport from which you&apos;d like to leave.</DrawerHeader>
                 <DrawerBody>
                   <Form onSubmit={onSubmit}>
-                    <DatePicker name='leaveDate' className='text-black' />
+                    <DatePicker name='leaveDate' defaultValue={date ? parseDate(date) : null} className='text-black' />
                     <Select name='leaveAirport' items={airportCodes} defaultSelectedKeys={[airport]}>
                       {airportCodes.map((airport) => (
                         <SelectItem key={airport.key}>{airport.label}</SelectItem>
