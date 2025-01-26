@@ -27,9 +27,6 @@ export default function Airplanes({
         // get camera distance from the ground
         const distance = camProps?.range || 0;
 
-
-        
-
         // scale the plane based on the distance
         return Math.min(Math.max((distance / 1000), minMax[0]), minMax[1]);
     }
@@ -112,6 +109,10 @@ export default function Airplanes({
         }
 
         setCurrentLocation(currentLocation);
+
+        return () => {
+            setCurrentLocation(null);
+        }
     }, [plane, time]);
 
     return (<>

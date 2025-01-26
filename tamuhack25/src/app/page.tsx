@@ -116,27 +116,19 @@ export default function Home() {
 
   useEffect(() => {
 
-    if (manualChange) {
-      return;
-    }
-
     // interval to increment timeOfDay every second
-    const interval = setInterval(() => {
+    const timeout = setTimeout(() => {
       setTimeOfDay((timeOfDay) => {
         return (timeOfDay + 0.1) % 86400;
       });
     }, 100);
 
     return () => {
-      clearInterval(interval);
+      clearTimeout(timeout);
     }
 
-  }, [manualChange]);
+  }, [timeOfDay]);
 
-  function manualChangeTimeOfDay(time: number) {
-    setTimeOfDay(time);
-    setManualChange(!manualChange);
-  }
 
   function getLeadingZero(num: number) {
     if (num < 10) {
@@ -169,7 +161,7 @@ export default function Home() {
                       maxValue={86400}
                       step={1}
                       value={timeOfDay}
-                      onChange={(e) => manualChangeTimeOfDay(e as number)}
+                      onChange={(e) => setTimeOfDay(e as number)}
                     />
                   </Form>
                 </DrawerBody>
