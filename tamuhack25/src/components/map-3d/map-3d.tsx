@@ -96,6 +96,7 @@ export type Model3DProps = {
   scale: number;
   src: string;
   children?: ReactNode;
+  onClick?: (event: any) => void;
 }
 
 export const Model3D = forwardRef(
@@ -125,6 +126,7 @@ export const Model3D = forwardRef(
     return (
       <>
         <gmp-model-3d ref={model3dRef} {...props}></gmp-model-3d>
+        {/* <Marker3D position={props.position} onClick={props.onClick ?? () => {}} >}></Marker3D> */}
       </>
     )
   }

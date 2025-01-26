@@ -51,16 +51,30 @@ export default function Airplanes({
 } */
 
     const getHeading = (lat1: number, long1: number, lat2: number, long2: number) => {
-        const dLon = (long2 - long1);
+        // convert lat and long to radians
+        const lat1Rad = lat1 * Math.PI / 180;
+        const long1Rad = long1 * Math.PI / 180;
+        const lat2Rad = lat2 * Math.PI / 180;
+        const long2Rad = long2 * Math.PI / 180;
 
-        const y = Math.sin(dLon) * Math.cos(lat2);
-        const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+        // get the difference in longitudes
+        const dLon = (long2Rad - long1Rad);
 
+        // get the y value
+        const y = Math.sin(dLon) * Math.cos(lat2Rad);
+
+        // get the x value
+        const x = Math.cos(lat1Rad) * Math.sin(lat2Rad) - Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(dLon);
+
+        // get the angle
         let brng = Math.atan2(y, x);
 
-        brng = (brng * 180 / Math.PI);
-        brng = (brng + 360) % 360;
-        brng = 360 - brng;
+        // convert to degrees
+        brng = brng * 180 / Math.PI;
+
+        // make the angle clockwise
+        // brng = (brng + 360) % 360;
+        // brng = 360 - brng;
 
         return brng;
     }
@@ -115,6 +129,35 @@ export default function Airplanes({
         }
     }, [plane, time]);
 
+    const getTrailCoordinates = () => {
+
+        if (!currentLocation) {
+            return {
+                lat: 0,
+                lng: 0,
+                altitude: 100
+            }
+        }
+
+        // get the distance between the origin and the destination
+        const distance = Math.sqrt(Math.pow(plane.origin.location.latitude - plane.destination.location.latitude, 2) + Math.pow(plane.origin.location.longitude - plane.destination.location.longitude, 2));
+
+        // get the distance between the origin and the current location
+        const currentDistance = Math.sqrt(Math.pow(plane.origin.location.latitude - currentLocation.lat, 2) + Math.pow(plane.origin.location.longitude - currentLocation.lng, 2));
+
+        // get the percentage of the distance that has been traveled
+        const percentage = currentDistance / distance;
+
+        // get the coordinates of the trail
+        const trailCoordinates = {
+            lat: plane.origin.location.latitude + ((plane.destination.location.latitude - plane.origin.location.latitude) * percentage),
+            lng: plane.origin.location.longitude + ((plane.destination.location.longitude - plane.origin.location.longitude) * percentage),
+            altitude: 100
+        };
+
+        return trailCoordinates;
+    }
+
     return (<>
         {currentLocation ? <>
             {/* <AdvancedMarker3D
@@ -135,21 +178,38 @@ export default function Airplanes({
 
             <Model3D position={{ lat: currentLocation.lat, lng: currentLocation.lng, altitude: 100 }} altitudeMode="RELATIVE_TO_GROUND" orientation={
                 {
-                    heading: getHeading(plane.origin.location.latitude, plane.origin.location.longitude, plane.destination.location.latitude, plane.destination.location.longitude),
+                    heading: 90 + getHeading(plane.origin.location.latitude, plane.origin.location.longitude, plane.destination.location.latitude, plane.destination.location.longitude),
+                    // heading: 180,
                     tilt: -90,
                     roll: 90
                 }
-            } scale={getScale()} src="http://localhost:3000/plane.glb"></Model3D>
+            }
+                onClick={() => {
+                    console.log('clicked')
+                }}
+
+                scale={getScale()} src="http://localhost:3000/plane.glb"></Model3D>
 
             <Polyline3D altitudeMode={'RELATIVE_TO_GROUND'} coordinates={[
-                { lat: plane.origin.location.latitude, lng: plane.origin.location.longitude, altitude: 10000 },
-                { lat: currentLocation.lat, lng: currentLocation.lng, altitude: 60000 },
-                { lat: plane.destination.location.latitude, lng: plane.destination.location.longitude, altitude: 10000 },
+                { lat: plane.origin.location.latitude, lng: plane.origin.location.longitude, altitude: 1000 },
+                { lat: currentLocation.lat, lng: currentLocation.lng, altitude: 1000 },
+                { lat: plane.destination.location.latitude, lng: plane.destination.location.longitude, altitude: 1000 },
             ]}
-                strokeColor="#50505099" strokeWidth={5}
+                strokeColor="#BBBBBB55" strokeWidth={5}
                 geodesic
                 drawsOccludedSegments
             ></Polyline3D>
+
+            {/* Create short trail 10% of the way */}
+            <Polyline3D altitudeMode={'RELATIVE_TO_GROUND'} coordinates={[
+                { lat: plane.origin.location.latitude, lng: plane.origin.location.longitude, altitude: 100 },
+                getTrailCoordinates(),
+            ]}
+                strokeColor="#FFFFFF77" strokeWidth={5}
+                geodesic
+                drawsOccludedSegments
+            ></Polyline3D>
+                
         </> : null}
     </>
     )
