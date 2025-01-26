@@ -171,6 +171,7 @@ export default function Home() {
     const data = Object.fromEntries(new FormData(e.currentTarget));
     console.log(data);
     setDate(data['leaveDate'] as string);
+    setAirport(data['leaveAirport'] as string);
   };
 
   useEffect(() => {
@@ -201,9 +202,6 @@ export default function Home() {
           });
           console.log(airportCodes[closestIndex].key)
           setAirport(airportCodes[closestIndex].key);
-        },
-        () => {
-          setLocation({ latitude: 37.7749, longitude: -122.4194 });
         }
       );
     }
@@ -213,7 +211,7 @@ export default function Home() {
       fetch(`https://flight-engine-rp1w.onrender.com/flights?date=${date}&origin=${airport.toUpperCase()}`).then(async (res) => {
         const flightData = await res.json();
         setFlightList(flightData);
-        console.log(flightData.length);
+        console.log(airport);
         setLoaded(true);
       })
 
@@ -322,7 +320,7 @@ export default function Home() {
           }}></Marker3D>
         )}
 
-        {flights && flights.slice(0, 50).map((flight, i) =>
+        {flightList && flightList.map((flight, i) =>
           // get date from "date" variable and timeOfDay from "timeOfDay" variable
           <Airplanes time={
             // get the date from the date variable and add the timeOfDay variable of milliseconds to it
