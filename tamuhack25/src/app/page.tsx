@@ -162,7 +162,7 @@ export default function Home() {
         heading: 0,
         range: 10000
       },
-      durationMillis: 2000
+      durationMillis: 5000
     });
   }
 
@@ -332,11 +332,18 @@ export default function Home() {
         setTimeout(() => {
           // setCurrentDescription("");
           setCurrentItinerary(-1);
+
         }, Math.max((10000 * i) - 1000, 0));
 
         setTimeout(() => {
           // setCurrentDescription(destination.description);
           setCurrentItinerary(i);
+
+          // if this is the last destination, fly the camera to the first destination
+          if (i === itinerary.destinations.length - 1) {
+            setIsLoading(false);
+          }
+
           // fly the camera to the destination
           map3DElement?.flyCameraTo({
             endCamera: {
@@ -361,9 +368,7 @@ export default function Home() {
 
     }).catch((err) => {
       console.error(err);
-    }).finally(() => {
-      setIsLoading(false);
-    });
+    })
 
     // call the API to get chatGPT to generate an itinerary
 
@@ -404,25 +409,26 @@ export default function Home() {
             </div>
 
           </div>}
-          <form onSubmit={(e) => {
-            e.preventDefault()
-            setPrompt('');
-            setElaboration('');
-            setIsLoading(true);
-            elaboratePlace(
-              `${itinerary?.destinations[currentItinerary]?.title ?? ''} ${chosenFlight?.destination.city ?? ''} ${itinerary?.destinations[currentItinerary]?.description ?? ''}`,
-              prompt
-            ).then((elaboration) => {
-              setIsLoading(false);
-              setElaboration(elaboration ?? 'Error');
-            }).catch((err) => {
-              console.error(err);
-            });
-          }} className='flex gap-2 mt-2'>
-            <Input autoComplete='off' value={prompt} disabled={isLoading} onValueChange={(val => {
-              setPrompt(val);
-            })} className='mt-4 w-max min-w-96 light' placeholder='Ask a question' />
-          </form>
+
+            {!isLoading && <form onSubmit={(e) => {
+              e.preventDefault()
+              setPrompt('');
+              setElaboration('');
+              setIsLoading(true);
+              elaboratePlace(
+                `${itinerary?.destinations[currentItinerary]?.title ?? ''} ${chosenFlight?.destination.city ?? ''} ${itinerary?.destinations[currentItinerary]?.description ?? ''}`,
+                prompt
+              ).then((elaboration) => {
+                setIsLoading(false);
+                setElaboration(elaboration ?? 'Error');
+              }).catch((err) => {
+                console.error(err);
+              });
+            }} className='flex gap-2 mt-2'>
+              <Input autoComplete='off' value={prompt} disabled={isLoading} onValueChange={(val => {
+                setPrompt(val);
+              })} className={cn("mt-4 w-max min-w-96 light transition-all", isLoading ? "translate-y-full opacity-0" : "opacity-100 translate-y-0")} placeholder='Ask a question' />
+            </form>}
         </div>
       </div>
 

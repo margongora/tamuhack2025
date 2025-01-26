@@ -80,13 +80,13 @@ declare global {
 // a helper type for CustomElement definitions
 type CustomElement<TElem, TAttr> = Partial<
   TAttr &
-  DOMAttributes<TElem> &
-  RefAttributes<TElem> & {
-    // for whatever reason, anything else doesn't work as children
-    // of a custom element, so we allow `any` here
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    children: any;
-  }
+    DOMAttributes<TElem> &
+    RefAttributes<TElem> & {
+      // for whatever reason, anything else doesn't work as children
+      // of a custom element, so we allow `any` here
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      children: any;
+    }
 >;
 
 // add Orientation3D to the google.maps namespace
