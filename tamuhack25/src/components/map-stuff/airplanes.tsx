@@ -3,6 +3,7 @@ import { Marker3D, Model3D, Polyline3D } from "../map-3d";
 import { use, useEffect, useRef, useState } from "react";
 import { useMapsLibrary } from "@vis.gl/react-google-maps";
 import { AdvancedMarker3D } from "./advanced-pin";
+import { useMap3D } from "@/context/map-context";
 // import { Model3D } from "./model";
 
 export default function Airplanes({
@@ -14,8 +15,58 @@ export default function Airplanes({
 }) {
 
     useMapsLibrary("marker");
+    const {
+        camProps,
+    } = useMap3D();
 
     const [currentLocation, setCurrentLocation] = useState<{ lat: number, lng: number } | null>(null);
+
+    const minMax = [1, 2000];
+
+    function getScale() {
+        // get camera distance from the ground
+        const distance = camProps?.range || 0;
+
+
+        
+
+        // scale the plane based on the distance
+        return Math.min(Math.max((distance / 1000), minMax[0]), minMax[1]);
+    }
+
+    /*
+    private double angleFromCoordinate(double lat1, double long1, double lat2,
+        double long2) {
+
+    double dLon = (long2 - long1);
+
+    double y = Math.sin(dLon) * Math.cos(lat2);
+    double x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1)
+            * Math.cos(lat2) * Math.cos(dLon);
+
+    double brng = Math.atan2(y, x);
+
+    brng = Math.toDegrees(brng);
+    brng = (brng + 360) % 360;
+    brng = 360 - brng; // count degrees counter-clockwise - remove to make clockwise
+
+    return brng;
+} */
+
+    const getHeading = (lat1: number, long1: number, lat2: number, long2: number) => {
+        const dLon = (long2 - long1);
+
+        const y = Math.sin(dLon) * Math.cos(lat2);
+        const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+
+        let brng = Math.atan2(y, x);
+
+        brng = (brng * 180 / Math.PI);
+        brng = (brng + 360) % 360;
+        brng = 360 - brng;
+
+        return brng;
+    }
 
     useEffect(() => {
 
@@ -81,20 +132,20 @@ export default function Airplanes({
 
             {/* <gm-model-3d position={`${currentLocation.lat},${currentLocation.lng},10000`} altitude-mode="RELATIVE_TO_GROUND" orientation="0,0,0" scale="200" src="http://localhost:3000/plane.glb"></gm-model-3d> */}
 
-            <Model3D position={{ lat: currentLocation.lat, lng: currentLocation.lng, altitude: 1000 }} altitudeMode="ABSOLUTE" orientation={
+            <Model3D position={{ lat: currentLocation.lat, lng: currentLocation.lng, altitude: 100 }} altitudeMode="RELATIVE_TO_GROUND" orientation={
                 {
-                    heading: 0,
-                    tilt: 0,
-                    roll: 0
+                    heading: getHeading(plane.origin.location.latitude, plane.origin.location.longitude, plane.destination.location.latitude, plane.destination.location.longitude),
+                    tilt: -90,
+                    roll: 90
                 }
-            } scale={1} src="http://localhost:3000/plane.glb"></Model3D>
+            } scale={getScale()} src="http://localhost:3000/plane.glb"></Model3D>
 
             <Polyline3D altitudeMode={'RELATIVE_TO_GROUND'} coordinates={[
                 { lat: plane.origin.location.latitude, lng: plane.origin.location.longitude, altitude: 10000 },
                 { lat: currentLocation.lat, lng: currentLocation.lng, altitude: 60000 },
                 { lat: plane.destination.location.latitude, lng: plane.destination.location.longitude, altitude: 10000 },
             ]}
-                strokeColor="#500000" strokeWidth={10}
+                strokeColor="#50505099" strokeWidth={5}
                 geodesic
                 drawsOccludedSegments
             ></Polyline3D>

@@ -13,7 +13,7 @@ import {
   useDisclosure,
 } from '@heroui/react'
 import { parseDate } from '@internationalized/date'; 
-import { Map3D, Marker3D, Polyline3D } from "@/components/map-3d";
+import { Map3D, Map3DCameraProps, Marker3D, Polyline3D } from "@/components/map-3d";
 import { useEffect, useRef, useState } from 'react';
 import { getAllAirports, getAllFlights } from '@/lib/client/utils';
 import { AllAirportsOutput } from './api/getAirports/_schema';
@@ -104,7 +104,7 @@ export default function Home() {
         console.log(flights.length);
         // randomly get 500 flights from the list
 
-        setFlights(flights.slice(0, 500));
+        setFlights(flights);
       }).catch((err) => {
         console.error(err);
       });
@@ -113,12 +113,19 @@ export default function Home() {
 
   useEffect(() => {
     // interval to increment timeOfDay every second
-    // const interval = setInterval(() => {
-    //   setTimeOfDay((timeOfDay) => {
-    //     return (timeOfDay + 1) % 1440;
-    //   });
-    // }, 100);
+    const interval = setInterval(() => {
+      setTimeOfDay((timeOfDay) => {
+        return (timeOfDay + 0.1) % 86400;
+      });
+    }, 100);
   }, []);
+
+  function getLeadingZero(num: number) {
+    if (num < 10) {
+      return `0${num}`;
+    }
+    return num;
+  }
 
   return (
     <div className="relative w-screen h-screen dark overflow-hidden">
@@ -141,7 +148,7 @@ export default function Home() {
                     <Slider
                       name='timeOfDay'
                       minValue={0}
-                      maxValue={1440} // in minutes
+                      maxValue={86400}
                       step={1}
                       value={timeOfDay}
                       onChange={(e) => setTimeOfDay(e as number)}
@@ -169,10 +176,10 @@ export default function Home() {
           }}></Marker3D>
         )}
 
-        {flights && flights.map((flight, i) =>
+        {flights && flights.slice(0,500).map((flight, i) =>
         // get date from "date" variable and timeOfDay from "timeOfDay" variable
           <Airplanes time={
-            new Date(`${date}T${Math.floor(timeOfDay / 60)}:${timeOfDay % 60}:00`)  
+            new Date(`${date}T${getLeadingZero(Math.floor(timeOfDay / 3600))}:${getLeadingZero(Math.floor((timeOfDay % 3600) / 60))}:${getLeadingZero(timeOfDay % 60)}`)
           } key={i} plane={flight}></Airplanes>
         )}
       </Map3D>

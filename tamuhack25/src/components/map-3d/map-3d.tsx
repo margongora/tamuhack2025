@@ -171,9 +171,10 @@ export const Map3D = forwardRef(
   ) => {
     useMapsLibrary("maps3d");
 
-    const { map3DElement, map3dRef } = useMap3D();
+    const { map3DElement, map3dRef, setCamProps  } = useMap3D();
 
     useMap3DCameraEvents(map3DElement, (p) => {
+      if (setCamProps) setCamProps(p);
       if (!props.onCameraChange) return;
       props.onCameraChange(p);
     });
