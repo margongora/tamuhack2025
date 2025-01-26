@@ -25,6 +25,7 @@ import Airplanes from '@/components/map-stuff/airplanes';
 import { Flight } from './api/getFlights/_schema';
 import { useMap3D } from '@/context/map-context';
 import { DateTimeFormatOptions, DateTime } from 'luxon';
+import ChosenFlight from '@/components/ChosenFlight';
 
 interface Coords {
   longitude: number,
@@ -74,7 +75,8 @@ const Destination = ({ destination, flights }: { destination: string, flights: F
 export default function Home() {
 
   const {
-    map3DElement
+    map3DElement,
+    map3dRef
   } = useMap3D();
 
   const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
@@ -109,7 +111,11 @@ export default function Home() {
     e.preventDefault();
 
     const data = Object.fromEntries(new FormData(e.currentTarget));
-    setChosenFlight(flights?.filter((flight) => flight['flightNumber'] == data['chosenFlight'])[0])
+    setChosenFlight(flightList?.filter((flight) => flight['flightNumber'] == data['chosenFlight'])[0])
+  }
+
+  const handleChosenReset = () => {
+    setChosenFlight(undefined);
   }
 
   useEffect(() => {
@@ -215,15 +221,15 @@ export default function Home() {
     // interval to increment timeOfDay ever 10 milliseconds
     const timeout = setTimeout(() => {
       setTimeOfDay((timeOfDay) => {
-        return timeOfDay + 1000;
+        return timeOfDay + 100;
       });
-    }, 1000);
+    }, 100);
 
     return () => {
       clearTimeout(timeout);
     }
 
-  }, [timeOfDay, flightList]);
+  }, [timeOfDay]);
 
 
   function getLeadingZero(num: number) {
@@ -275,40 +281,42 @@ export default function Home() {
             )}
           </DrawerContent>
         </Drawer>
-        <div>
-          <Button onPress={onOpen2}>See Flights</Button>
-          <Drawer isOpen={isOpen2} classNames={{
-            backdrop: 'backdrop-blur-md',
-          }} onOpenChange={onOpenChange2}>
-            <DrawerContent className='bg-gray-400/90'>
-              {(onClose) => (
-                <>
-                  <DrawerHeader>List of flights outgoing from your closest airport.</DrawerHeader>
-                  <DrawerBody>
-                    {flightList ? (
-                      <Skeleton isLoaded={loaded}>
-                        <Form onSubmit={onFlightSubmit} id='selectFlight'>
-                          <span>Leaving from {airport.toUpperCase()} on {date}</span>
-                          <RadioGroup label='Please select a flight.' className='w-full' name='chosenFlight'>
-                            {
-                              Object.entries(destinations).map((entry, idx) => {
-                                return entry[1] ? <Destination destination={entry[0]} flights={entry[1]} key={idx} /> : null;
-                              })
-                            }
-                          </RadioGroup>
-                        </Form>
-                      </Skeleton>
-                    ) : (<p>Please select a date to leave first.</p>)}
-                  </DrawerBody>
-                  <DrawerFooter>
-                    {flightList && <Button color='success' type='submit' onPress={onClose} form='selectFlight'>Select flight</Button>}
-                    <Button onPress={onClose}>Close list</Button>
-                  </DrawerFooter>
-                </>
-              )}
-            </DrawerContent>
-          </Drawer>
-        </div>
+        <Button onPress={onOpen2}>See Flights</Button>
+        <Drawer isOpen={isOpen2} classNames={{
+          backdrop: 'backdrop-blur-md',
+        }} onOpenChange={onOpenChange2}>
+          <DrawerContent className='bg-gray-400/90'>
+            {(onClose) => (
+              <>
+                <DrawerHeader>List of flights outgoing from your closest airport.</DrawerHeader>
+                <DrawerBody>
+                  {flightList ? (
+                    <Skeleton isLoaded={loaded}>
+                      <Form onSubmit={onFlightSubmit} id='selectFlight'>
+                        <span>Leaving from {airport.toUpperCase()} on {date}</span>
+                        <RadioGroup label='Please select a flight.' className='w-full' name='chosenFlight'>
+                          {
+                            Object.entries(destinations).map((entry, idx) => {
+                              return entry[1] ? <Destination destination={entry[0]} flights={entry[1]} key={idx} /> : null;
+                            })
+                          }
+                        </RadioGroup>
+                      </Form>
+                    </Skeleton>
+                  ) : (<p>Please select a date to leave first.</p>)}
+                </DrawerBody>
+                <DrawerFooter>
+                  {flightList && <Button color='success' type='submit' onPress={onClose} form='selectFlight'>Select flight</Button>}
+                  <Button onPress={onClose}>Close list</Button>
+                </DrawerFooter>
+              </>
+            )}
+          </DrawerContent>
+        </Drawer>
+        <ChosenFlight flight={chosenFlight} />
+        {chosenFlight && (
+          <Button onPress={handleChosenReset}>Reset Chosen Flight</Button>
+        )}
       </div>
       <Map3D>
         {/* <Polyline3D altitudeMode={'RELATIVE_TO_GROUND'} coordinates={[
@@ -344,13 +352,21 @@ export default function Home() {
             // get the date from the date variable and add the timeOfDay variable of milliseconds to it
             getDatePlusMilliseconds(date, timeOfDay)
           } plane={chosenFlight}></Airplanes>
-        ) : (flightList) ? flightList.map((flight, i) =>
+        ) : (flightList) ? flightList.map((flight, i) => {
+
+          const parsedDate = getDatePlusMilliseconds(date, timeOfDay);
+
+          // if the flight is not in the air, don't show it
+          if (parsedDate < new Date(flight.departureTime) || parsedDate > new Date(flight.arrivalTime)) {
+            return null;
+          }
+
           // get date from "date" variable and timeOfDay from "timeOfDay" variable
-          <Airplanes time={
+          return <Airplanes time={
             // get the date from the date variable and add the timeOfDay variable of milliseconds to it
             getDatePlusMilliseconds(date, timeOfDay)
           } key={i} plane={flight}></Airplanes>
-        ) : (<></>)}
+        }) : null}
       </Map3D>
     </div>
   );
