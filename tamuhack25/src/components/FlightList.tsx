@@ -2,8 +2,6 @@
 import { Airport } from '@/app/api/getAirports/_schema';
 import { Flight } from '@/app/api/getFlights/_schema';
 import {
-  Accordion,
-  AccordionItem,
   Button,
   Drawer,
   DrawerBody,
@@ -23,12 +21,12 @@ const Destination = ({ destination, flights }: { destination: string, flights: F
   const cityName = flights[0]["destination"]["city"];
   const numFlights = flights.length;
 
-  return <div className="p-2 bg-gray-300 rounded-md w-full flex flex-col">
+  return <div className="flex w-full flex-col rounded-md border-1 border-solid border-gray-500 bg-gray-300 p-2 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-100">
     <span><strong>{cityName}</strong> ({destination})</span>
     <details>
       <summary>{numFlights} flights available</summary>
 
-      {flights.map((flight) => {
+      {flights.map((flight, i) => {
         const flightNumber = flight.flightNumber;
 
         const timeFormat: DateTimeFormatOptions = {
