@@ -38,7 +38,7 @@ export default function Airplanes({
         console.log(camProps.range, camProps?.range);
 
 
-        const distance = range_tmp * Math.cos(tilt_rad);
+        const distance = camProps.range * Math.cos(tilt_rad);
 
         // scale the plane based on the distance
         return Math.min(Math.max((distance / 500), minMax[0]), minMax[1]);
