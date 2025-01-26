@@ -24,11 +24,24 @@ export default function Airplanes({
     const minMax = [1, 2000];
 
     function getScale() {
-        // get camera distance from the ground
-        const distance = camProps?.range || 0;
+        // get camera distance from the ground using range and tilt
+
+        if (!camProps) {
+            return 1;
+        }
+
+        const tilt_rad = camProps.tilt / 2 * Math.PI / 180;
+
+        // if tilt is greater than 45, limit the range
+        // const range_tmp = camProps.tilt > 45 ? camProps.range / ((camProps.tilt - 45)/2) : camProps.range;
+
+        console.log(camProps.range, camProps?.range);
+
+
+        const distance = range_tmp * Math.cos(tilt_rad);
 
         // scale the plane based on the distance
-        return Math.min(Math.max((distance / 1000), minMax[0]), minMax[1]);
+        return Math.min(Math.max((distance / 500), minMax[0]), minMax[1]);
     }
 
     const getHeading = (lat1: number, long1: number, lat2: number, long2: number) => {
@@ -173,24 +186,24 @@ export default function Airplanes({
             scale={getScale()} src="http://localhost:3000/plane.glb"></Model3D>
 
         <Polyline3D altitudeMode={'RELATIVE_TO_GROUND'} coordinates={[
-            { lat: plane.origin.location.latitude, lng: plane.origin.location.longitude, altitude: 1000 },
-            { lat: currentLocation?.lat ?? 0, lng: currentLocation?.lng ?? 0, altitude: 1000 },
-            { lat: plane.destination.location.latitude, lng: plane.destination.location.longitude, altitude: 1000 },
+            { lat: plane.origin.location.latitude, lng: plane.origin.location.longitude, altitude: 100 },
+            { lat: currentLocation?.lat ?? 0, lng: currentLocation?.lng ?? 0, altitude: 100 },
+            { lat: plane.destination.location.latitude, lng: plane.destination.location.longitude, altitude: 100 },
         ]}
             strokeColor={currentLocation ? "#BBBBBB55" : "transparent"} strokeWidth={currentLocation ? 5 : 0}
-            geodesic
+            // geodesic
             drawsOccludedSegments
         ></Polyline3D>
 
         {/* Create short trail 10% of the way */}
-        <Polyline3D altitudeMode={'RELATIVE_TO_GROUND'} coordinates={[
+        {/* <Polyline3D altitudeMode={'RELATIVE_TO_GROUND'} coordinates={[
             { lat: plane.origin.location.latitude, lng: plane.origin.location.longitude, altitude: 100 },
             getTrailCoordinates(),
         ]}
             strokeColor={currentLocation ? "#FFFFFF77" : "transparent"} strokeWidth={currentLocation ? 5 : 0}
-            geodesic
+            // geodesic
             drawsOccludedSegments
-        ></Polyline3D>
+        ></Polyline3D> */}
 
     </>
     )
