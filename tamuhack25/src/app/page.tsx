@@ -234,9 +234,9 @@ export default function Home() {
     // interval to increment timeOfDay ever 10 milliseconds
     const timeout = setTimeout(() => {
       setTimeOfDay((timeOfDay) => {
-        return timeOfDay + 50;
+        return timeOfDay + 1000;
       });
-    }, 50);
+    }, 1000);
 
     return () => {
       clearTimeout(timeout);
