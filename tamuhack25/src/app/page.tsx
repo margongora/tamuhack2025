@@ -234,9 +234,9 @@ export default function Home() {
     // interval to increment timeOfDay ever 10 milliseconds
     const timeout = setTimeout(() => {
       setTimeOfDay((timeOfDay) => {
-        return timeOfDay + 10;
+        return timeOfDay + 50;
       });
-    }, 10);
+    }, 50);
 
     return () => {
       clearTimeout(timeout);
@@ -262,8 +262,10 @@ export default function Home() {
     <div className="relative w-screen h-screen dark overflow-hidden">
       <div className='dark absolute top-0 left-0 p-4 z-10'>
         <Button onPress={onOpen}>Input Info</Button>
-        <Drawer backdrop='blur' isOpen={isOpen} onOpenChange={onOpenChange} placement="left">
-          <DrawerContent className='bg-gray-400'>
+        <Drawer classNames={{
+          backdrop: 'backdrop-blur-md',
+        }} isOpen={isOpen} onOpenChange={onOpenChange} placement="left">
+          <DrawerContent className='bg-gray-400/90'>
             {(onClose) => (
               <>
                 <DrawerHeader>Input what date and airport from which you&apos;d like to leave.</DrawerHeader>

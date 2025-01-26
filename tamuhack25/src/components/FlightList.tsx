@@ -63,8 +63,10 @@ const FlightList = ({ airport, date, flights, loading }: { airport: string, date
   return (
     <div>
       <Button onPress={onOpen}>See Flights</Button>
-      <Drawer isOpen={isOpen} onOpenChange={onOpenChange}>
-        <DrawerContent className='bg-gray-400'>
+      <Drawer isOpen={isOpen} classNames={{
+          backdrop: 'backdrop-blur-md',
+        }} onOpenChange={onOpenChange}>
+        <DrawerContent className='bg-gray-400/90'>
           {(onClose) => (
             <>
               <DrawerHeader>List of flights outgoing from your closest airport.</DrawerHeader>
@@ -73,7 +75,7 @@ const FlightList = ({ airport, date, flights, loading }: { airport: string, date
                   <Skeleton isLoaded={loading}>
                     <Form onSubmit={handleSubmit} id='selectFlight'>
                       <span>Leaving from {airport.toUpperCase()} on {date}</span>
-                      <RadioGroup label='Please select a flight.' name='chosenFlight'>
+                      <RadioGroup label='Please select a flight.' className='w-full' name='chosenFlight'>
                         {
                           Object.entries(destinations).map((entry, idx) => {
                             return entry[1] ? <Destination destination={entry[0]} flights={entry[1]} key={idx} /> : null;
