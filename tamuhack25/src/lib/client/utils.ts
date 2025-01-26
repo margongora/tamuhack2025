@@ -153,3 +153,33 @@ export async function getPlaceFromName(name: string) {
         return null;
     }
 }
+
+export async function elaboratePlace(description: string, question: string) {
+    try {
+
+        // fetch data from the API https://flight-engine-rp1w.onrender.com/airports/all
+        const response = await fetch("/api/elaboration", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ messages: [{ role: 'assistant', content: description }, { role: 'user', content: question }] }),
+        });
+
+        // check if the response is ok
+        if (!response.ok) {
+            throw new Error("API Error");
+        }
+
+        // parse the response as JSON
+        const data = await response.json();
+
+        console.log(data);
+
+        return data as string;
+
+    } catch (e) {
+        console.error(e);
+        return null;
+    }
+}

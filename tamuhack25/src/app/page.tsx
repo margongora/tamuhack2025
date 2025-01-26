@@ -21,7 +21,7 @@ import {
 import { parseDate } from '@internationalized/date';
 import { Map3D, Marker3D } from "@/components/map-3d";
 import { useEffect, useState } from 'react';
-import { getAllAirports, getAllFlights, getItinerary, getPlaceFromName } from '@/lib/client/utils';
+import { elaboratePlace, getAllAirports, getAllFlights, getItinerary, getPlaceFromName } from '@/lib/client/utils';
 import { AllAirportsOutput } from './api/getAirports/_schema';
 import Airplanes from '@/components/map-stuff/airplanes';
 import { Flight } from './api/getFlights/_schema';
@@ -299,7 +299,8 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const [itinerary, setItinerary] = useState<TravelItinerary | null>(null);
-  const [currentDescription, setCurrentDescription] = useState<string>('');
+  const [currentItinerary, setCurrentItinerary] = useState<number>(-1);
+  const [elaboration, setElaboration] = useState<string>("");
 
   function generateItinerary() {
 
@@ -329,11 +330,13 @@ export default function Home() {
         itinerary.destinations[i].longitude = place[0].location.longitude;
 
         setTimeout(() => {
-          setCurrentDescription("");
+          // setCurrentDescription("");
+          setCurrentItinerary(-1);
         }, Math.max((10000 * i) - 1000, 0));
 
         setTimeout(() => {
-          setCurrentDescription(destination.description);
+          // setCurrentDescription(destination.description);
+          setCurrentItinerary(i);
           // fly the camera to the destination
           map3DElement?.flyCameraTo({
             endCamera: {
@@ -364,10 +367,14 @@ export default function Home() {
 
     // call the API to get chatGPT to generate an itinerary
 
-
   }
 
+  useEffect(() => {
+    setElaboration("");
+  }, [currentItinerary]);
 
+
+  const [prompt, setPrompt] = useState<string>("");
 
   return (
     <div className="relative w-screen h-screen flex justify-center items-center dark overflow-hidden">
@@ -380,17 +387,42 @@ export default function Home() {
       </div>
 
       <div className='absolute top-20 w-full pointer-events-none z-20 flex justify-center'>
-        <div className={cn('pointer-events-auto max-w-[800px] transition-all p-4', currentDescription !== "" ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0')}>
+        <div className={cn('pointer-events-auto max-w-[800px] transition-all p-4', currentItinerary > -1 ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0')}>
           <div className='bg-gray-400/50 backdrop-blur-sm p-8 rounded-lg'>
             <div className='flex gap-2 flex-col'>
               <div className='font-bold text-xl flex justify-between w-full'>
-                {itinerary && itinerary.destinations.find((destination) => destination.description === currentDescription)?.title}
-                <XIcon className='cursor-pointer' onClick={() => setCurrentDescription('')} />
+                {itinerary && currentItinerary > -1 && itinerary.destinations[currentItinerary].title}
+                <XIcon className='cursor-pointer' onClick={() => setCurrentItinerary(-1)} />
               </div>
-              <p>{currentDescription}</p>
+              <p>{itinerary && currentItinerary > -1 && itinerary.destinations[currentItinerary].description}</p>
+            </div>
+          </div>
+
+          {elaboration != "" && <div className='bg-gray-400/50 backdrop-blur-sm p-8 rounded-lg mt-6'>
+            <div className='flex gap-2 flex-col'>
+              <p>{elaboration}</p>
             </div>
 
-          </div>
+          </div>}
+          <form onSubmit={(e) => {
+            e.preventDefault()
+            setPrompt('');
+            setElaboration('');
+            setIsLoading(true);
+            elaboratePlace(
+              `${itinerary?.destinations[currentItinerary]?.title ?? ''} ${chosenFlight?.destination.city ?? ''} ${itinerary?.destinations[currentItinerary]?.description ?? ''}`,
+              prompt
+            ).then((elaboration) => {
+              setIsLoading(false);
+              setElaboration(elaboration ?? 'Error');
+            }).catch((err) => {
+              console.error(err);
+            });
+          }} className='flex gap-2 mt-2'>
+            <Input autoComplete='off' value={prompt} disabled={isLoading} onValueChange={(val => {
+              setPrompt(val);
+            })} className='mt-4 w-max min-w-96 light' placeholder='Ask a question' />
+          </form>
         </div>
       </div>
 
@@ -495,9 +527,9 @@ export default function Home() {
           {itinerary && itinerary.destinations.map((destination, i) => {
             return <Marker3D color='#DDFFDD' borderColor='#99BB99' glyphColor='#99BB99' key={i} position={{ lat: destination.latitude, lng: destination.longitude }} label={destination.title} onClick={() => {
               console.log('clicked')
-              setCurrentDescription("");
+              setCurrentItinerary(-1);
               setTimeout(() => {
-                setCurrentDescription(destination.description);
+                setCurrentItinerary(i);
               }, 500);
               map3DElement?.flyCameraTo({
                 endCamera: {
