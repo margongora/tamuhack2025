@@ -25,113 +25,7 @@ import Airplanes from '@/components/map-stuff/airplanes';
 import { Flight } from './api/getFlights/_schema';
 import { useMap3D } from '@/context/map-context';
 import { DateTimeFormatOptions, DateTime } from 'luxon';
-
-const airportCodes = [
-  { key: 'atl', label: 'ATL' },
-  { key: 'bos', label: 'BOS' },
-  { key: 'bwi', label: 'BWI' },
-  { key: 'clt', label: 'CLT' },
-  { key: 'den', label: 'DEN' },
-  { key: 'dfw', label: 'DFW' },
-  { key: 'dtw', label: 'DTW' },
-  { key: 'ewr', label: 'EWR' },
-  { key: 'fll', label: 'FLL' },
-  { key: 'gso', label: 'GSO' },
-  { key: 'iah', label: 'IAH' },
-  { key: 'jfk', label: 'JFK' },
-  { key: 'las', label: 'LAS' },
-  { key: 'lax', label: 'LAX' },
-  { key: 'mco', label: 'MCO' },
-  { key: 'mia', label: 'MIA' },
-  { key: 'msp', label: 'MSP' },
-  { key: 'ord', label: 'ORD' },
-  { key: 'phl', label: 'PHL' },
-  { key: 'phx', label: 'PHX' },
-  { key: 'san', label: 'SAN' },
-  { key: 'sea', label: 'SEA' },
-  { key: 'sfo', label: 'SFO' },
-  { key: 'slc', label: 'SLC' },
-  { key: 'tpa', label: 'TPA' }
-]
-
-const airportCoords = [
-  {
-    latitude: 33.6404,
-    longitude: -84.4198
-  }, {
-    latitude: 42.3656,
-    longitude: -71.0096
-  }, {
-    latitude: 39.1774,
-    longitude: -76.6684
-  }, {
-    latitude: 35.2138,
-    longitude: -80.943
-  }, {
-    latitude: 39.8493,
-    longitude: -104.6738
-  }, {
-    latitude: 32.8998,
-    longitude: -97.0403
-  }, {
-    latitude: 36.1043,
-    longitude: -79.935
-  }, {
-    latitude: 40.6895,
-    longitude: -74.1745
-  }, {
-    latitude: 26.0742,
-    longitude: -80.1506
-  }, {
-    latitude: 36.0726,
-    longitude: -79.792
-  }, {
-    latitude: 29.9902,
-    longitude: -95.3368
-  }, {
-    latitude: 40.6413,
-    longitude: -73.7781
-  }, {
-    latitude: 36.08601,
-    longitude: -115.1539
-  }, {
-    latitude: 33.9416,
-    longitude: -118.4085
-  }, {
-    latitude: 28.4179,
-    longitude: -81.3041
-  }, {
-    latitude: 25.7969,
-    longitude: -80.2762
-  }, {
-    latitude: 44.8848,
-    longitude: -93.2223
-  }, {
-    latitude: 41.9742,
-    longitude: -87.9073
-  }, {
-    latitude: 39.8729,
-    longitude: -75.2437
-  }, {
-    latitude: 36.1043,
-    longitude: -79.935
-  }, {
-    latitude: 37.6213,
-    longitude: -122.379
-  }, {
-    latitude: 47.4435,
-    longitude: -122.3016
-  }, {
-    latitude: 37.6213,
-    longitude: -122.379
-  }, {
-    latitude: 40.7899,
-    longitude: -111.9791
-  }, {
-    latitude: 36.1043,
-    longitude: -79.935
-  }
-]
+import ChosenFlight from '@/components/ChosenFlight';
 
 interface Coords {
   longitude: number,
@@ -188,10 +82,12 @@ export default function Home() {
   const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [airport, setAirport] = useState<string>('');
   const [chosenFlight, setChosenFlight] = useState<Flight | undefined>(undefined);
-  const [flights, setFlights] = useState<Flight[] | undefined>(undefined);
   const [flightList, setFlightList] = useState<Flight[] | undefined>(undefined);
   const [airports, setAirports] = useState<AllAirportsOutput | undefined>(undefined);
   const [loaded, setLoaded] = useState<boolean>(false);
+  const [airportCodes, setAirportCodes] = useState<{ key: string, label: string }[]>([]);
+  const [airportCoords, setAirportCoords] = useState<Coords[]>([]);
+  const [currLocation, setCurrLocation] = useState<Coords | undefined>(undefined);
 
   const [timeOfDay, setTimeOfDay] = useState<number>(0);
 
@@ -207,15 +103,56 @@ export default function Home() {
     // Get form data as an object.
     const data = Object.fromEntries(new FormData(e.currentTarget));
     console.log(data);
-    setDate(data['leaveDate'] as string);
+    const newDate = data['leaveDate'] as string;
+    const leaveAirport = data['leaveAirport'] as string;
+    setDate(newDate);
     setAirport(data['leaveAirport'] as string);
+
+    fetch(`https://flight-engine-rp1w.onrender.com/flights?date=${newDate}&origin=${leaveAirport.toUpperCase()}`).then(async (res) => {
+      const flightData = await res.json();
+      setFlightList(flightData);
+      console.log(airport);
+    })
   };
 
   const onFlightSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const data = Object.fromEntries(new FormData(e.currentTarget));
-    setChosenFlight(flights?.filter((flight) => flight['flightNumber'] == data['chosenFlight'])[0])
+    const newFlight = flightList?.filter((flight) => flight['flightNumber'] == data['chosenFlight'])[0];
+    setChosenFlight(newFlight);
+
+    map3DElement?.flyCameraTo({
+      endCamera: {
+        center: {
+          lat: newFlight!.destination.location.latitude,
+          lng: newFlight!.destination.location.longitude,
+          altitude: 1000
+        },
+        tilt: 45,
+        heading: 0,
+        range: 10000
+      },
+      durationMillis: 2000
+    });
+
+  }
+
+  const handleChosenReset = () => {
+    setChosenFlight(undefined);
+    map3DElement?.flyCameraTo({
+      endCamera: {
+        center: {
+          lat: currLocation!.latitude,
+          lng: currLocation!.longitude,
+          altitude: 1000
+        },
+        tilt: 45,
+        heading: 0,
+        range: 10000
+      },
+      durationMillis: 2000
+    });
   }
 
   useEffect(() => {
@@ -224,34 +161,79 @@ export default function Home() {
         if (!airports) return;
         console.log(airports);
         setAirports(airports);
-      });
-  }, [])
+        const updatedCodes = airports.map((airport) => ({
+          key: airport.code.toLowerCase(),
+          label: airport.code,
+        }));
+        const updatedCoords = airports.map((airport) => ({
+          latitude: airport.location.latitude,
+          longitude: airport.location.longitude
+        }));
+        setAirportCodes(updatedCodes);
+        setAirportCoords(updatedCoords);
+        //console.log("Airport Codes:", updatedCodes);
+        //console.log("Airport Coords:", updatedCoords);
+      })
+      .catch((err) => console.error(err));
+  }, []);
+
 
   useEffect(() => {
 
     if (navigator.geolocation && airport == '') {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          let closestIndex = 0;
-          let distance = Infinity;
-          airportCoords.forEach((coords, idx) => {
-            const dist = haversine(coords, { latitude, longitude });
-            console.log(`${idx}: ${dist}`)
+      if (airportCoords.length > 0 && airportCodes.length > 0) {
+        console.log(airportCoords);
+        console.log(airportCodes);
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            setCurrLocation({ latitude, longitude });
+            let closestIndex = 0;
+            let distance = Infinity;
+            airportCoords.forEach((coords, idx) => {
+              const dist = haversine(coords, { latitude, longitude });
+              if (dist < distance) {
+                distance = dist;
+                closestIndex = idx;
+              }
+            });
+            setAirport(airportCodes[closestIndex]?.key || '');
+          },
+          () => {
+            setAirport(airportCodes[0]?.key || '');
+          }
+        );
+      } else {
+        const interval = setInterval(() => {
+          if (airportCoords.length > 0 && airportCodes.length > 0) {
+            clearInterval(interval);
+            navigator.geolocation.getCurrentPosition(
+              (position) => {
+                const { latitude, longitude } = position.coords;
+                setCurrLocation({ latitude, longitude });
+                let closestIndex = 0;
+                let distance = Infinity;
 
-            if (dist < distance) {
-              distance = dist;
-              closestIndex = idx;
-            }
-          });
-          console.log(airportCodes[closestIndex].key)
-          setAirport(airportCodes[closestIndex].key);
-        }
-      );
+                airportCoords.forEach((coords, idx) => {
+                  const dist = haversine(coords, { latitude, longitude });
+
+                  if (dist < distance) {
+                    distance = dist;
+                    closestIndex = idx;
+                  }
+                });
+
+                setAirport(airportCodes[closestIndex]?.key || '');
+              },
+              () => {
+                setAirport(airportCodes[0]?.key || '');
+              }
+            );
+          }
+        }, 100);
+      }
     }
-
     if (date !== '') {
-      setLoaded(false);
       fetch(`https://flight-engine-rp1w.onrender.com/flights?date=${date}&origin=${airport.toUpperCase()}`).then(async (res) => {
         const flightData = await res.json();
         setFlightList(flightData);
@@ -265,12 +247,11 @@ export default function Home() {
         console.log(flights.length);
         // randomly get 500 flights from the list
 
-        setFlights(flights);
       }).catch((err) => {
         console.error(err);
       });
     }
-  }, [date, airport])
+  }, [date, airport, airportCodes, airportCoords]);
 
   useEffect(() => {
 
@@ -288,12 +269,12 @@ export default function Home() {
   }, [timeOfDay]);
 
 
-  function getLeadingZero(num: number) {
-    if (num < 10) {
-      return `0${num}`;
-    }
-    return num;
-  }
+  // function getLeadingZero(num: number) {
+  //   if (num < 10) {
+  //     return `0${num}`;
+  //   }
+  //   return num;
+  // }
 
   function getDatePlusMilliseconds(date: string, milliseconds: number) {
     const d = new Date(date);
@@ -337,40 +318,42 @@ export default function Home() {
             )}
           </DrawerContent>
         </Drawer>
-        <div>
-          <Button onPress={onOpen2}>See Flights</Button>
-          <Drawer isOpen={isOpen2} classNames={{
-            backdrop: 'backdrop-blur-md',
-          }} onOpenChange={onOpenChange2}>
-            <DrawerContent className='bg-gray-400/90'>
-              {(onClose) => (
-                <>
-                  <DrawerHeader>List of flights outgoing from your closest airport.</DrawerHeader>
-                  <DrawerBody>
-                    {flightList ? (
-                      <Skeleton isLoaded={loaded}>
-                        <Form onSubmit={onFlightSubmit} id='selectFlight'>
-                          <span>Leaving from {airport.toUpperCase()} on {date}</span>
-                          <RadioGroup label='Please select a flight.' className='w-full' name='chosenFlight'>
-                            {
-                              Object.entries(destinations).map((entry, idx) => {
-                                return entry[1] ? <Destination destination={entry[0]} flights={entry[1]} key={idx} /> : null;
-                              })
-                            }
-                          </RadioGroup>
-                        </Form>
-                      </Skeleton>
-                    ) : (<p>Please select a date to leave first.</p>)}
-                  </DrawerBody>
-                  <DrawerFooter>
-                    {flightList && <Button color='success' type='submit' onPress={onClose} form='selectFlight'>Select flight</Button>}
-                    <Button onPress={onClose}>Close list</Button>
-                  </DrawerFooter>
-                </>
-              )}
-            </DrawerContent>
-          </Drawer>
-        </div>
+        <Button onPress={onOpen2}>See Flights</Button>
+        <Drawer isOpen={isOpen2} classNames={{
+          backdrop: 'backdrop-blur-md',
+        }} onOpenChange={onOpenChange2}>
+          <DrawerContent className='bg-gray-400/90'>
+            {(onClose) => (
+              <>
+                <DrawerHeader>List of flights outgoing from your closest airport.</DrawerHeader>
+                <DrawerBody>
+                  {flightList ? (
+                    <Skeleton isLoaded={loaded}>
+                      <Form onSubmit={onFlightSubmit} id='selectFlight'>
+                        <span>Leaving from {airport.toUpperCase()} on {date}</span>
+                        <RadioGroup label='Please select a flight.' className='w-full' name='chosenFlight'>
+                          {
+                            Object.entries(destinations).map((entry, idx) => {
+                              return entry[1] ? <Destination destination={entry[0]} flights={entry[1]} key={idx} /> : null;
+                            })
+                          }
+                        </RadioGroup>
+                      </Form>
+                    </Skeleton>
+                  ) : (<p>Please select a date to leave first.</p>)}
+                </DrawerBody>
+                <DrawerFooter>
+                  {flightList && <Button color='success' type='submit' onPress={onClose} form='selectFlight'>Select flight</Button>}
+                  <Button onPress={onClose}>Close list</Button>
+                </DrawerFooter>
+              </>
+            )}
+          </DrawerContent>
+        </Drawer>
+        <ChosenFlight flight={chosenFlight} />
+        {chosenFlight && (
+          <Button onPress={handleChosenReset}>Reset Chosen Flight</Button>
+        )}
       </div>
       <Map3D>
         {/* <Polyline3D altitudeMode={'RELATIVE_TO_GROUND'} coordinates={[
