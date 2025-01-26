@@ -11,17 +11,20 @@ import {
   Select,
   SelectItem,
   useDisclosure,
+  Radio,
+  DrawerFooter,
+  RadioGroup,
+  Skeleton,
 } from '@heroui/react'
 import { parseDate } from '@internationalized/date';
-import { Map3D, Map3DCameraProps, Marker3D, Polyline3D } from "@/components/map-3d";
-import { useEffect, useRef, useState } from 'react';
+import { Map3D, Marker3D } from "@/components/map-3d";
+import { useEffect, useState } from 'react';
 import { getAllAirports, getAllFlights } from '@/lib/client/utils';
 import { AllAirportsOutput } from './api/getAirports/_schema';
-import { AllFlightsOutput } from './api/getFlights/_schema';
 import Airplanes from '@/components/map-stuff/airplanes';
-import FlightList from '@/components/FlightList';
 import { Flight } from './api/getFlights/_schema';
 import { useMap3D } from '@/context/map-context';
+import { DateTimeFormatOptions, DateTime } from 'luxon';
 
 const airportCodes = [
   { key: 'atl', label: 'ATL' },
@@ -144,6 +147,37 @@ const haversine = (givenLocation: Coords, currLocation: Coords) => {
   return 2 * R * Math.asin(Math.sqrt((1 - Math.cos(latDiff) + Math.cos(currLocation.latitude * (Math.PI / 180)) * Math.cos(givenLocation.latitude * (Math.PI / 180)) * (1 - Math.cos(longDiff))) / 2))
 }
 
+const Destination = ({ destination, flights }: { destination: string, flights: Flight[] }) => {
+  const cityName = flights[0]["destination"]["city"];
+  const numFlights = flights.length;
+
+  return <div className="flex w-full flex-col rounded-md border-1 border-solid border-gray-500 bg-gray-300 p-2 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-100">
+    <span><strong>{cityName}</strong> ({destination})</span>
+    <details>
+      <summary>{numFlights} flights available</summary>
+
+      {flights.map((flight) => {
+        const flightNumber = flight.flightNumber;
+
+        const timeFormat: DateTimeFormatOptions = {
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZoneName: 'shortGeneric'
+        }
+
+        const departureTime = DateTime.fromISO(flight.departureTime).toLocaleString({ timeZone: flight.origin.timezone, ...timeFormat });
+        const arrivalTime = DateTime.fromISO(flight.arrivalTime).toLocaleString({ timeZone: flight.destination.timezone, ...timeFormat });
+
+        return (
+          <Radio key={flightNumber} value={flightNumber}
+            description={`Flight no. ${flightNumber} - ${flight.duration.locale}`}>
+            <strong>{departureTime}</strong> to <strong>{arrivalTime}</strong>
+          </Radio>);
+      })}
+    </details>
+  </div >
+}
+
 export default function Home() {
 
   const {
@@ -153,6 +187,7 @@ export default function Home() {
 
   const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [airport, setAirport] = useState<string>('');
+  const [chosenFlight, setChosenFlight] = useState<Flight | undefined>(undefined);
   const [flights, setFlights] = useState<Flight[] | undefined>(undefined);
   const [flightList, setFlightList] = useState<Flight[] | undefined>(undefined);
   const [airports, setAirports] = useState<AllAirportsOutput | undefined>(undefined);
@@ -160,11 +195,12 @@ export default function Home() {
 
   const [timeOfDay, setTimeOfDay] = useState<number>(0);
 
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const { isOpen: isOpen1, onOpen: onOpen1, onOpenChange: onOpenChange1 } = useDisclosure();
+  const { isOpen: isOpen2, onOpen: onOpen2, onOpenChange: onOpenChange2 } = useDisclosure();
 
-  const [pause, setPause] = useState<boolean>(false);
+  // const [pause, setPause] = useState<boolean>(false);
 
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const onInSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     // Prevent default browser page refresh.
     e.preventDefault();
 
@@ -174,6 +210,13 @@ export default function Home() {
     setDate(data['leaveDate'] as string);
     setAirport(data['leaveAirport'] as string);
   };
+
+  const onFlightSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const data = Object.fromEntries(new FormData(e.currentTarget));
+    setChosenFlight(flights?.filter((flight) => flight['flightNumber'] == data['chosenFlight'])[0])
+  }
 
   useEffect(() => {
     getAllAirports()
@@ -229,7 +272,6 @@ export default function Home() {
     }
   }, [date, airport])
 
-
   useEffect(() => {
 
     // interval to increment timeOfDay ever 10 milliseconds
@@ -259,19 +301,21 @@ export default function Home() {
     return d;
   }
 
+  const destinations = Object.groupBy(flightList ? flightList : [], (item) => item["destination"]["code"]);
+
   return (
     <div className="relative w-screen h-screen dark overflow-hidden">
       <div className='dark absolute top-0 left-0 p-4 z-10'>
-        <Button onPress={onOpen}>Input Info</Button>
+        <Button onPress={onOpen1}>Input Info</Button>
         <Drawer classNames={{
           backdrop: 'backdrop-blur-md',
-        }} isOpen={isOpen} onOpenChange={onOpenChange} placement="left">
+        }} isOpen={isOpen1} onOpenChange={onOpenChange1} placement="left">
           <DrawerContent className='bg-gray-400/90'>
             {(onClose) => (
               <>
                 <DrawerHeader>Input what date and airport from which you&apos;d like to leave.</DrawerHeader>
                 <DrawerBody>
-                  <Form onSubmit={onSubmit}>
+                  <Form onSubmit={onInSubmit}>
                     <DatePicker name='leaveDate' defaultValue={parseDate(date)} className='text-black' />
                     <Select name='leaveAirport' items={airportCodes} defaultSelectedKeys={[airport]}>
                       {airportCodes.map((airport) => (
@@ -293,7 +337,40 @@ export default function Home() {
             )}
           </DrawerContent>
         </Drawer>
-        <FlightList airport={airport} date={date} flights={flightList} loading={loaded} />
+        <div>
+          <Button onPress={onOpen2}>See Flights</Button>
+          <Drawer isOpen={isOpen2} classNames={{
+            backdrop: 'backdrop-blur-md',
+          }} onOpenChange={onOpenChange2}>
+            <DrawerContent className='bg-gray-400/90'>
+              {(onClose) => (
+                <>
+                  <DrawerHeader>List of flights outgoing from your closest airport.</DrawerHeader>
+                  <DrawerBody>
+                    {flightList ? (
+                      <Skeleton isLoaded={loaded}>
+                        <Form onSubmit={onFlightSubmit} id='selectFlight'>
+                          <span>Leaving from {airport.toUpperCase()} on {date}</span>
+                          <RadioGroup label='Please select a flight.' className='w-full' name='chosenFlight'>
+                            {
+                              Object.entries(destinations).map((entry, idx) => {
+                                return entry[1] ? <Destination destination={entry[0]} flights={entry[1]} key={idx} /> : null;
+                              })
+                            }
+                          </RadioGroup>
+                        </Form>
+                      </Skeleton>
+                    ) : (<p>Please select a date to leave first.</p>)}
+                  </DrawerBody>
+                  <DrawerFooter>
+                    {flightList && <Button color='success' type='submit' onPress={onClose} form='selectFlight'>Select flight</Button>}
+                    <Button onPress={onClose}>Close list</Button>
+                  </DrawerFooter>
+                </>
+              )}
+            </DrawerContent>
+          </Drawer>
+        </div>
       </div>
       <Map3D>
         {/* <Polyline3D altitudeMode={'RELATIVE_TO_GROUND'} coordinates={[
@@ -323,7 +400,13 @@ export default function Home() {
           }}></Marker3D>
         )}
 
-        {flightList && flightList.map((flight, i) => {
+        {(chosenFlight) ? (
+          // get date from "date" variable and timeOfDay from "timeOfDay" variable
+          <Airplanes time={
+            // get the date from the date variable and add the timeOfDay variable of milliseconds to it
+            getDatePlusMilliseconds(date, timeOfDay)
+          } plane={chosenFlight}></Airplanes>
+        ) : (flightList) ? flightList.map((flight, i) => {
 
           const parsedDate = getDatePlusMilliseconds(date, timeOfDay);
 
@@ -337,7 +420,7 @@ export default function Home() {
             // get the date from the date variable and add the timeOfDay variable of milliseconds to it
             getDatePlusMilliseconds(date, timeOfDay)
           } key={i} plane={flight}></Airplanes>
-        })}
+        }) : null}
       </Map3D>
     </div>
   );

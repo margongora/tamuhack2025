@@ -19,8 +19,6 @@ export default function Airplanes({
         camProps,
     } = useMap3D();
 
-    const ref = useRef<google.maps.maps3d.Model3DElement>(null);
-
     const [currentLocation, setCurrentLocation] = useState<{ lat: number, lng: number } | null>(null);
 
     const minMax = [1, 2000];
@@ -160,7 +158,7 @@ export default function Airplanes({
 
         {/* <gm-model-3d position={`${currentLocation.lat},${currentLocation.lng},10000`} altitude-mode="RELATIVE_TO_GROUND" orientation="0,0,0" scale="200" src="http://localhost:3000/plane.glb"></gm-model-3d> */}
 
-        <Model3D ref={ref} position={{ lat: currentLocation?.lat ?? 0, lng: currentLocation?.lng ?? 0, altitude: currentLocation ? 100 : -100 }} altitudeMode="RELATIVE_TO_GROUND" orientation={
+        <Model3D position={{ lat: currentLocation?.lat ?? 0, lng: currentLocation?.lng ?? 0, altitude: currentLocation ? 100 : -100 }} altitudeMode="RELATIVE_TO_GROUND" orientation={
             {
                 heading: 90 + getHeading(plane.origin.location.latitude, plane.origin.location.longitude, plane.destination.location.latitude, plane.destination.location.longitude),
                 // heading: 180,
