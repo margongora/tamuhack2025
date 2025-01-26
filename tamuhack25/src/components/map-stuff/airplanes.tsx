@@ -1,9 +1,9 @@
 import { Flight } from "@/app/api/getFlights/_schema";
-import { Marker3D, Polyline3D } from "../map-3d";
+import { Marker3D, Model3D, Polyline3D } from "../map-3d";
 import { use, useEffect, useRef, useState } from "react";
 import { useMapsLibrary } from "@vis.gl/react-google-maps";
 import { AdvancedMarker3D } from "./advanced-pin";
-import { Model3D } from "./model";
+// import { Model3D } from "./model";
 
 export default function Airplanes({
     plane,
@@ -81,7 +81,7 @@ export default function Airplanes({
 
             {/* <gm-model-3d position={`${currentLocation.lat},${currentLocation.lng},10000`} altitude-mode="RELATIVE_TO_GROUND" orientation="0,0,0" scale="200" src="http://localhost:3000/plane.glb"></gm-model-3d> */}
 
-            <Model3D position={{ lat: currentLocation.lat, lng: currentLocation.lng, altitude: 1000 }} altitudeMode="RELATIVE_TO_GROUND" orientation={
+            <Model3D position={{ lat: currentLocation.lat, lng: currentLocation.lng, altitude: 1000 }} altitudeMode="ABSOLUTE" orientation={
                 {
                     heading: 0,
                     tilt: 0,

@@ -83,6 +83,53 @@ export const Polyline3D = forwardRef(
   }
 );
 
+export type Orientation3D = {
+  heading: number;
+  tilt: number;
+  roll: number;
+}
+
+export type  Model3DProps = {
+  position: google.maps.LatLngAltitudeLiteral;
+  altitudeMode: string;
+  orientation: Orientation3D;
+  scale: number;
+  src: string;
+  children?: ReactNode;
+}
+
+export const Model3D = forwardRef(
+  (
+    props: Model3DProps,
+    forwardedRef: ForwardedRef<google.maps.maps3d.Model3DElement | null>
+  ) => {
+    useMapsLibrary('maps3d');
+
+    const [model3DElement, model3dRef] = useCallbackRef<google.maps.maps3d.Model3DElement>();
+
+    useEffect(() => {
+      customElements.whenDefined('gmp-model-3d').then(() => {
+        setCustomElementsReady(true);
+      });
+    }, []);
+
+    const [customElementsReady, setCustomElementsReady] = useState(false);
+
+    useImperativeHandle<
+      google.maps.maps3d.Model3DElement | null,
+      google.maps.maps3d.Model3DElement | null
+    >(forwardedRef, () => model3DElement, [model3DElement]);
+
+    if (!customElementsReady) return null;
+
+    return (
+      <>
+        <gmp-model-3d ref={model3dRef} {...props}></gmp-model-3d>
+      </>
+    )
+  }
+);
+
 
 export const Marker3D = forwardRef(
   (
