@@ -27,113 +27,6 @@ import { useMap3D } from '@/context/map-context';
 import { DateTimeFormatOptions, DateTime } from 'luxon';
 import ChosenFlight from '@/components/ChosenFlight';
 
-const airportCodes = [
-  { key: 'atl', label: 'ATL' },
-  { key: 'bos', label: 'BOS' },
-  { key: 'bwi', label: 'BWI' },
-  { key: 'clt', label: 'CLT' },
-  { key: 'den', label: 'DEN' },
-  { key: 'dfw', label: 'DFW' },
-  { key: 'dtw', label: 'DTW' },
-  { key: 'ewr', label: 'EWR' },
-  { key: 'fll', label: 'FLL' },
-  { key: 'gso', label: 'GSO' },
-  { key: 'iah', label: 'IAH' },
-  { key: 'jfk', label: 'JFK' },
-  { key: 'las', label: 'LAS' },
-  { key: 'lax', label: 'LAX' },
-  { key: 'mco', label: 'MCO' },
-  { key: 'mia', label: 'MIA' },
-  { key: 'msp', label: 'MSP' },
-  { key: 'ord', label: 'ORD' },
-  { key: 'phl', label: 'PHL' },
-  { key: 'phx', label: 'PHX' },
-  { key: 'san', label: 'SAN' },
-  { key: 'sea', label: 'SEA' },
-  { key: 'sfo', label: 'SFO' },
-  { key: 'slc', label: 'SLC' },
-  { key: 'tpa', label: 'TPA' }
-]
-
-const airportCoords = [
-  {
-    latitude: 33.6404,
-    longitude: -84.4198
-  }, {
-    latitude: 42.3656,
-    longitude: -71.0096
-  }, {
-    latitude: 39.1774,
-    longitude: -76.6684
-  }, {
-    latitude: 35.2138,
-    longitude: -80.943
-  }, {
-    latitude: 39.8493,
-    longitude: -104.6738
-  }, {
-    latitude: 32.8998,
-    longitude: -97.0403
-  }, {
-    latitude: 36.1043,
-    longitude: -79.935
-  }, {
-    latitude: 40.6895,
-    longitude: -74.1745
-  }, {
-    latitude: 26.0742,
-    longitude: -80.1506
-  }, {
-    latitude: 36.0726,
-    longitude: -79.792
-  }, {
-    latitude: 29.9902,
-    longitude: -95.3368
-  }, {
-    latitude: 40.6413,
-    longitude: -73.7781
-  }, {
-    latitude: 36.08601,
-    longitude: -115.1539
-  }, {
-    latitude: 33.9416,
-    longitude: -118.4085
-  }, {
-    latitude: 28.4179,
-    longitude: -81.3041
-  }, {
-    latitude: 25.7969,
-    longitude: -80.2762
-  }, {
-    latitude: 44.8848,
-    longitude: -93.2223
-  }, {
-    latitude: 41.9742,
-    longitude: -87.9073
-  }, {
-    latitude: 39.8729,
-    longitude: -75.2437
-  }, {
-    latitude: 36.1043,
-    longitude: -79.935
-  }, {
-    latitude: 37.6213,
-    longitude: -122.379
-  }, {
-    latitude: 47.4435,
-    longitude: -122.3016
-  }, {
-    latitude: 37.6213,
-    longitude: -122.379
-  }, {
-    latitude: 40.7899,
-    longitude: -111.9791
-  }, {
-    latitude: 36.1043,
-    longitude: -79.935
-  }
-]
-
 interface Coords {
   longitude: number,
   latitude: number
@@ -193,6 +86,8 @@ export default function Home() {
   const [flightList, setFlightList] = useState<Flight[] | undefined>(undefined);
   const [airports, setAirports] = useState<AllAirportsOutput | undefined>(undefined);
   const [loaded, setLoaded] = useState<boolean>(false);
+  const [airportCodes, setAirportCodes] = useState<{ key: string, label: string }[]>([]);
+  const [airportCoords, setAirportCoords] = useState<Coords[]>([]);
 
   const [timeOfDay, setTimeOfDay] = useState<number>(0);
 
@@ -237,32 +132,76 @@ export default function Home() {
         if (!airports) return;
         console.log(airports);
         setAirports(airports);
-      });
-  }, [])
+        const updatedCodes = airports.map((airport) => ({
+          key: airport.code.toLowerCase(),
+          label: airport.code,
+        }));
+        const updatedCoords = airports.map((airport) => ({
+          latitude: airport.location.latitude,
+          longitude: airport.location.longitude
+        }));
+        setAirportCodes(updatedCodes);
+        setAirportCoords(updatedCoords);
+        //console.log("Airport Codes:", updatedCodes);
+        //console.log("Airport Coords:", updatedCoords);
+      })
+      .catch((err) => console.error(err));
+  }, []);
+
 
   useEffect(() => {
 
     if (navigator.geolocation && airport == '') {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          let closestIndex = 0;
-          let distance = Infinity;
-          airportCoords.forEach((coords, idx) => {
-            const dist = haversine(coords, { latitude, longitude });
-            console.log(`${idx}: ${dist}`)
-
-            if (dist < distance) {
-              distance = dist;
-              closestIndex = idx;
-            }
-          });
-          console.log(airportCodes[closestIndex].key)
-          setAirport(airportCodes[closestIndex].key);
-        }
-      );
+      if (airportCoords.length > 0 && airportCodes.length > 0) {
+        console.log(airportCoords);
+        console.log(airportCodes);
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            let closestIndex = 0;
+            let distance = Infinity;
+            airportCoords.forEach((coords, idx) => {
+              const dist = haversine(coords, { latitude, longitude });
+              if (dist < distance) {
+                distance = dist;
+                closestIndex = idx;
+              }
+            });
+            setAirport(airportCodes[closestIndex]?.key || '');
+          },
+          () => {
+            setAirport(airportCodes[0]?.key || '');
+          }
+        );
+      } else {
+        const interval = setInterval(() => {
+          if (airportCoords.length > 0 && airportCodes.length > 0) {
+            clearInterval(interval);
+            navigator.geolocation.getCurrentPosition(
+              (position) => {
+                const { latitude, longitude } = position.coords;
+                let closestIndex = 0;
+                let distance = Infinity;
+ 
+                airportCoords.forEach((coords, idx) => {
+                  const dist = haversine(coords, { latitude, longitude });
+ 
+                  if (dist < distance) {
+                    distance = dist;
+                    closestIndex = idx;
+                  }
+                });
+ 
+                setAirport(airportCodes[closestIndex]?.key || '');
+              },
+              () => {
+                setAirport(airportCodes[0]?.key || '');
+              }
+            );
+          }
+        }, 100);
+      }
     }
-
     if (date !== '') {
       fetch(`https://flight-engine-rp1w.onrender.com/flights?date=${date}&origin=${airport.toUpperCase()}`).then(async (res) => {
         const flightData = await res.json();
@@ -281,7 +220,7 @@ export default function Home() {
         console.error(err);
       });
     }
-  }, [date, airport])
+  }, [date, airport, airportCodes, airportCoords]);
 
   useEffect(() => {
 
