@@ -208,8 +208,16 @@ export default function Home() {
     // Get form data as an object.
     const data = Object.fromEntries(new FormData(e.currentTarget));
     console.log(data);
-    setDate(data['leaveDate'] as string);
+    const newDate = data['leaveDate'] as string;
+    const leaveAirport = data['leaveAirport'] as string;
+    setDate(newDate);
     setAirport(data['leaveAirport'] as string);
+
+    fetch(`https://flight-engine-rp1w.onrender.com/flights?date=${newDate}&origin=${leaveAirport.toUpperCase()}`).then(async (res) => {
+      const flightData = await res.json();
+      setFlightList(flightData);
+      console.log(airport);
+    })
   };
 
   const onFlightSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -256,7 +264,6 @@ export default function Home() {
     }
 
     if (date !== '') {
-      setLoaded(false);
       fetch(`https://flight-engine-rp1w.onrender.com/flights?date=${date}&origin=${airport.toUpperCase()}`).then(async (res) => {
         const flightData = await res.json();
         setFlightList(flightData);
@@ -270,7 +277,6 @@ export default function Home() {
         console.log(flights.length);
         // randomly get 500 flights from the list
 
-        setFlights(flights);
       }).catch((err) => {
         console.error(err);
       });
