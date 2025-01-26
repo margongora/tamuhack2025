@@ -128,6 +128,7 @@ export default function Home() {
     const data = Object.fromEntries(new FormData(e.currentTarget));
     const newFlight = flightList?.filter((flight) => flight['flightNumber'] == data['chosenFlight'])[0];
     setChosenFlight(newFlight);
+    setIsLoading(false);
     setItinerary(null);
 
     // set the timeOfDay to the milliseconds since midnight of the departure time
@@ -151,6 +152,8 @@ export default function Home() {
 
   const handleChosenReset = () => {
     setChosenFlight(undefined);
+    setIsLoading(false);
+    setTempIt(null);
     map3DElement?.flyCameraTo({
       endCamera: {
         center: {
@@ -302,6 +305,70 @@ export default function Home() {
   const [currentItinerary, setCurrentItinerary] = useState<number>(-1);
   const [elaboration, setElaboration] = useState<string>("");
 
+  const [tempIt, setTempIt] = useState<TravelItinerary | null>(null);
+
+  useEffect(() => {
+
+    if (!tempIt || !chosenFlight) return;
+
+    const timouts: NodeJS.Timeout[] = [];
+
+    // for each destination in the itinerary, get the place from the name
+    tempIt?.destinations.forEach(async (destination, i) => {
+      const place = await getPlaceFromName(destination.title + " " + chosenFlight.destination.city)
+      if (!place) return;
+      console.log(place);
+      tempIt.destinations[i].latitude = place[0].location.latitude;
+      tempIt.destinations[i].longitude = place[0].location.longitude;
+
+      timouts.push(setTimeout(() => {
+        // setCurrentDescription("");
+        setCurrentItinerary(-1);
+
+      }, Math.max((10000 * i) - 1000, 0)));
+
+      timouts.push(setTimeout(() => {
+        // setCurrentDescription(destination.description);
+        setCurrentItinerary(i);
+
+        // if this is the last destination, fly the camera to the first destination
+        if (i === tempIt.destinations.length - 1) {
+          setIsLoading(false);
+          setTempIt(null);
+        }
+
+        // fly the camera to the destination
+        map3DElement?.flyCameraTo({
+          endCamera: {
+            center: {
+              lat: place[0].location.latitude,
+              lng: place[0].location.longitude,
+              altitude: 250
+            },
+            tilt: 50,
+            heading: 0,
+            range: 1500
+          },
+          durationMillis: 4000
+        });
+      }, 10000 * i));
+    });
+
+    setItinerary(tempIt);
+
+    return () => {
+
+      setCurrentItinerary(-1);
+
+      // clear all timeouts
+      timouts.forEach((timeout) => {
+        clearTimeout(timeout);
+      });
+    }
+
+  }, [tempIt, isLoading]);
+
+
   function generateItinerary() {
 
     if (isLoading || !chosenFlight) return;
@@ -310,6 +377,7 @@ export default function Home() {
 
     getItinerary(chosenFlight.destination.city, chosenFlight.destination.code, date).then((itinerary) => {
       console.log(itinerary);
+      setTempIt(itinerary);
 
       // itinerary?.destinations.forEach(async (destination, i) => {
       //   const place = await getPlaceFromName(destination.title).then((place) => {
@@ -321,47 +389,7 @@ export default function Home() {
       //   });
       // });
 
-      // for each destination in the itinerary, get the place from the name
-      itinerary?.destinations.forEach(async (destination, i) => {
-        const place = await getPlaceFromName(destination.title + " " + chosenFlight.destination.city)
-        if (!place) return;
-        console.log(place);
-        itinerary.destinations[i].latitude = place[0].location.latitude;
-        itinerary.destinations[i].longitude = place[0].location.longitude;
 
-        setTimeout(() => {
-          // setCurrentDescription("");
-          setCurrentItinerary(-1);
-
-        }, Math.max((10000 * i) - 1000, 0));
-
-        setTimeout(() => {
-          // setCurrentDescription(destination.description);
-          setCurrentItinerary(i);
-
-          // if this is the last destination, fly the camera to the first destination
-          if (i === itinerary.destinations.length - 1) {
-            setIsLoading(false);
-          }
-
-          // fly the camera to the destination
-          map3DElement?.flyCameraTo({
-            endCamera: {
-              center: {
-                lat: place[0].location.latitude,
-                lng: place[0].location.longitude,
-                altitude: 250
-              },
-              tilt: 50,
-              heading: 0,
-              range: 1500
-            },
-            durationMillis: 4000
-          });
-        }, 10000 * i);
-      });
-
-      setItinerary(itinerary);
 
 
 
@@ -397,7 +425,10 @@ export default function Home() {
             <div className='flex gap-2 flex-col'>
               <div className='font-bold text-xl flex justify-between w-full'>
                 {itinerary && currentItinerary > -1 && itinerary.destinations[currentItinerary].title}
-                <XIcon className='cursor-pointer' onClick={() => setCurrentItinerary(-1)} />
+                <XIcon className='cursor-pointer' onClick={() => {
+                  setTempIt(null);
+                  setCurrentItinerary(-1)
+                }} />
               </div>
               <p>{itinerary && currentItinerary > -1 && itinerary.destinations[currentItinerary].description}</p>
             </div>
@@ -410,26 +441,26 @@ export default function Home() {
 
           </div>}
 
-            {!isLoading && <form onSubmit={(e) => {
-              e.preventDefault()
-              setPrompt('');
-              setElaboration('');
-              setIsLoading(true);
-              elaboratePlace(
-                `${itinerary?.destinations[currentItinerary]?.title ?? ''} ${chosenFlight?.destination.city ?? ''} ${itinerary?.destinations[currentItinerary]?.description ?? ''}`,
-                prompt
-              ).then((elaboration) => {
-                setIsLoading(false);
-                setElaboration(elaboration ?? 'Error');
-              }).catch((err) => {
-                console.error(err);
-              });
-            }} className='flex gap-2 mt-2'>
-              <Input autoComplete='off' value={prompt} disabled={isLoading} onValueChange={(val => {
-                setPrompt(val);
-              })} className={cn("mt-4 w-max min-w-96 light transition-all", isLoading ? "translate-y-full opacity-0" : "opacity-100 translate-y-0")} placeholder='Ask a question' />
-            </form>}
-            
+          {!isLoading && <form onSubmit={(e) => {
+            e.preventDefault()
+            setPrompt('');
+            setElaboration('');
+            setIsLoading(true);
+            elaboratePlace(
+              `${itinerary?.destinations[currentItinerary]?.title ?? ''} ${chosenFlight?.destination.city ?? ''} ${itinerary?.destinations[currentItinerary]?.description ?? ''}`,
+              prompt
+            ).then((elaboration) => {
+              setIsLoading(false);
+              setElaboration(elaboration ?? 'Error');
+            }).catch((err) => {
+              console.error(err);
+            });
+          }} className='flex gap-2 mt-2'>
+            <Input autoComplete='off' value={prompt} disabled={isLoading} onValueChange={(val => {
+              setPrompt(val);
+            })} className={cn("mt-4 w-max min-w-96 light transition-all", isLoading ? "translate-y-full opacity-0" : "opacity-100 translate-y-0")} placeholder='Ask a question' />
+          </form>}
+
         </div>
       </div>
 
@@ -515,6 +546,7 @@ export default function Home() {
           {airports && airports.map((airport, i) =>
             <Marker3D key={i} position={{ lat: airport.location.latitude, lng: airport.location.longitude }} label={airport.code} onClick={() => {
               console.log('clicked')
+              setTempIt(null);
               map3DElement?.flyCameraTo({
                 endCamera: {
                   center: {
@@ -535,6 +567,7 @@ export default function Home() {
             return <Marker3D color='#DDFFDD' borderColor='#99BB99' glyphColor='#99BB99' key={i} position={{ lat: destination.latitude, lng: destination.longitude }} label={destination.title} onClick={() => {
               console.log('clicked')
               setCurrentItinerary(-1);
+              setTempIt(null);
               setTimeout(() => {
                 setCurrentItinerary(i);
               }, 500);
