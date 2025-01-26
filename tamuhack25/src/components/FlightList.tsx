@@ -28,7 +28,7 @@ const Destination = ({ destination, flights }: { destination: string, flights: F
     <details>
       <summary>{numFlights} flights available</summary>
 
-      {flights.map((flight) => {
+      {flights.map((flight, i) => {
         const flightNumber = flight.flightNumber;
 
         const timeFormat: DateTimeFormatOptions = {
@@ -41,7 +41,7 @@ const Destination = ({ destination, flights }: { destination: string, flights: F
         const arrivalTime = DateTime.fromISO(flight.arrivalTime).toLocaleString({ timeZone: flight.destination.timezone, ...timeFormat });
 
         return (
-          <Radio key={flightNumber} value={flightNumber}>
+          <Radio key={flightNumber + i} value={flightNumber}>
             <strong>{departureTime}</strong> to <strong>{arrivalTime}</strong>
           </Radio>);
       })}

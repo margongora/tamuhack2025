@@ -56,12 +56,16 @@ export default function Home() {
   const [airport, setAirport] = useState<string>('dfw');
   const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [flights, setFlights] = useState<Flight[] | undefined>(undefined);
+  const [flightList, setFlightList] = useState<Flight[] | undefined>(undefined);
   const [airports, setAirports] = useState<AllAirportsOutput | undefined>(undefined);
   const [loaded, setLoaded] = useState<boolean>(false);
 
   const [timeOfDay, setTimeOfDay] = useState<number>(0);
 
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+
+  const [pause, setPause] = useState<boolean>(false);
+
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     // Prevent default browser page refresh.
     e.preventDefault();
@@ -83,20 +87,13 @@ export default function Home() {
 
   useEffect(() => {
     if (date !== '') {
-      // fetch(`https://flight-engine-rp1w.onrender.com/flights?date=${date}&origin=${airport.toUpperCase()}`).then(async (res) => {
-      //   setLoaded(false);
-      //   const flightData = await res.json();
-      //   setFlights(flightData);
-      //   console.log(flightData.length);
-      //   setLoaded(true);
-      // })
-      // console.log(date)
-      // fetch(`https://flight-engine-rp1w.onrender.com/flights?date=${date}&origin=DFW`).then(async (res) => {
-      //   const flightData = await res.json();
-      //   setFlights(flightData)
-      //   console.log(flightData.length)
-      // })
-      // console.log(date)
+      setLoaded(false);
+      fetch(`https://flight-engine-rp1w.onrender.com/flights?date=${date}&origin=${airport.toUpperCase()}`).then(async (res) => {
+        const flightData = await res.json();
+        setFlightList(flightData);
+        console.log(flightData.length);
+        setLoaded(true);
+      })
 
       getAllFlights(date).then((flights) => {
         if (!flights) return;
@@ -159,7 +156,7 @@ export default function Home() {
             )}
           </DrawerContent>
         </Drawer>
-        <FlightList airport={airport} date={date} flights={flights} loading={loaded} />
+        <FlightList airport={airport} date={date} flights={flightList} loading={loaded} />
       </div>
       <Map3D>
         {/* <Polyline3D altitudeMode={'RELATIVE_TO_GROUND'} coordinates={[
@@ -176,7 +173,7 @@ export default function Home() {
           }}></Marker3D>
         )}
 
-        {flights && flights.slice(0,500).map((flight, i) =>
+        {flights && flights.slice(0,100).map((flight, i) =>
         // get date from "date" variable and timeOfDay from "timeOfDay" variable
           <Airplanes time={
             new Date(`${date}T${getLeadingZero(Math.floor(timeOfDay / 3600))}:${getLeadingZero(Math.floor((timeOfDay % 3600) / 60))}:${getLeadingZero(timeOfDay % 60)}`)
