@@ -152,34 +152,51 @@ export const Map3D = forwardRef(
 
     useDeepCompareEffect(() => {
       if (!map3DElement) return;
-
+    
       Object.assign(map3DElement, map3dOptions);
-
+    
       getAllAirports()
         .then((flights) => {
-
           if (!map3DElement || !flights) return;
-          
           flights.forEach((flight) => {
             const position = {
               lat: flight.location.latitude,
               lng: flight.location.longitude,
               altitude: 0,
             };
-            //console.log("position:",position)
             const marker = new google.maps.maps3d.Marker3DInteractiveElement({
-              position: position,
+              position,
             });
-
-            marker.addEventListener("gmp-click", (event: any) => {
-              console.log("Marker clicked:", event.target.position);
-            });
-
+            marker.addEventListener("gmp-click", (event: any) =>
+              console.log("Marker clicked:", event.target.position)
+            );
             map3DElement.append(marker);
           });
+          const fallbackLocation = { lat: 37.7749, lng: -122.4194, altitude: 0 };
+    
+          const addUserMarker = (position: { lat: number; lng: number }) => {
+            const marker = new google.maps.maps3d.Marker3DInteractiveElement({
+              position,
+            });
+            marker.addEventListener("gmp-click", (event: any) =>
+              console.log("User Marker clicked:", event.target.position)
+            );
+            map3DElement.append(marker);
+          };
+    
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              (position) => addUserMarker({ lat: position.coords.latitude, lng: position.coords.longitude }),
+              () => addUserMarker(fallbackLocation)
+            );
+          } else {
+            addUserMarker(fallbackLocation);
+          }
         })
-        .catch((error: any) => console.error("Error fetching flights:", error));
+        .catch((error) => console.error("Error fetching flights:", error));
     }, [map3DElement, map3dOptions]);
+    
+    
 
     useImperativeHandle(
       forwardedRef,
