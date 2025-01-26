@@ -185,7 +185,7 @@ export default function Airplanes({
                 console.log('clicked')
             }}
 
-            scale={getScale()} src="http://localhost:3000/plane.glb"></Model3D>
+            scale={getScale()} src="plane.glb"></Model3D>
 
         <Polyline3D altitudeMode={'RELATIVE_TO_GROUND'} coordinates={[
             { lat: plane.origin.location.latitude, lng: plane.origin.location.longitude, altitude: 100 },
