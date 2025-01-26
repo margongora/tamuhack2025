@@ -25,28 +25,27 @@ const Destination = ({ destination, flights }) => {
     <span><strong>{cityName}</strong> ({destination})</span>
     <details>
       <summary>{numFlights} flights available</summary>
-      <RadioGroup label='Please select a flight.' name='chosenFlight'>
-        {flights.map((flight, idx: number) => {
-          const flightNumber = flight["flightNumber"] as string;
 
-          const timeFormat: DateTimeFormatOptions = {
-            hour: '2-digit',
-            minute: '2-digit',
-            timeZoneName: 'shortGeneric'
-          }
+      {flights.map((flight) => {
+        const flightNumber = flight["flightNumber"] as string;
 
-          const departureTime = DateTime.fromISO(flight["departureTime"]);
-          const arrivalTime = DateTime.fromISO(flight["arrivalTime"]);
+        const timeFormat: DateTimeFormatOptions = {
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZoneName: 'shortGeneric'
+        }
+
+        const departureTime = DateTime.fromISO(flight["departureTime"]);
+        const arrivalTime = DateTime.fromISO(flight["arrivalTime"]);
 
 
-          return (
-            <Radio key={idx} value={flightNumber}>
-              <strong>{departureTime.toLocaleString({ timeZone: flight["origin"]["timezone"], ...timeFormat })}</strong> to <strong>{arrivalTime.toLocaleString({ timeZone: flight["destination"]["timezone"], ...timeFormat })}</strong>
-            </Radio>);
-        })}
-      </RadioGroup>
+        return (
+          <Radio key={flightNumber} value={flightNumber}>
+            <strong>{departureTime.toLocaleString({ timeZone: flight["origin"]["timezone"], ...timeFormat })}</strong> to <strong>{arrivalTime.toLocaleString({ timeZone: flight["destination"]["timezone"], ...timeFormat })}</strong>
+          </Radio>);
+      })}
     </details>
-  </div>
+  </div >
 }
 
 const FlightList = ({ airport, date, flights, loading }) => {
@@ -80,12 +79,13 @@ const FlightList = ({ airport, date, flights, loading }) => {
                           return (<Radio key={idx} value={flightNumber}>Flight {flightNumber} to {flight["destination"]["city"]}</Radio>)
                         })}
                       </RadioGroup>*/}
-                      {
-
-                        Object.entries(destinations).map((entry, idx) => {
-                          return <Destination destination={entry[0]} flights={entry[1]} key={idx} />;
-                        })
-                      }
+                      <RadioGroup label='Please select a flight.' name='chosenFlight'>
+                        {
+                          Object.entries(destinations).map((entry, idx) => {
+                            return <Destination destination={entry[0]} flights={entry[1]} key={idx} />;
+                          })
+                        }
+                      </RadioGroup>
                     </Form>
                   </Skeleton>
                 )}
