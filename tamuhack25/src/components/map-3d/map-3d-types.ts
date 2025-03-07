@@ -28,6 +28,7 @@ declare global {
 
     // Extend the existing Map3DElement interface
     interface Map3DElement extends HTMLElement {
+      mode?: 'HYBRID' | 'SATELLITE';
       flyCameraTo(options: CameraOptions): Promise<void>;
     }
 

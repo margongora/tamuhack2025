@@ -1,21 +1,19 @@
 "use client";
 
 import { useMapsLibrary } from "@vis.gl/react-google-maps";
-import React, {
+import {
   ForwardedRef,
   forwardRef,
   ReactNode,
   useEffect,
   useImperativeHandle,
-  useRef,
-  useState,
+  useState
 } from "react";
-import { useMap3DCameraEvents } from "./use-map-3d-camera-events";
 import { useCallbackRef, useDeepCompareEffect } from "../utility-hooks";
+import { useMap3DCameraEvents } from "./use-map-3d-camera-events";
 
-import './map-3d-types';
-import { getAllAirports } from '@/lib/client/utils';
 import { useMap3D } from "@/context/map-context";
+import './map-3d-types';
 
 export type Map3DProps = google.maps.maps3d.Map3DElementOptions & {
   onCameraChange?: (cameraProps: Map3DCameraProps) => void;
@@ -350,7 +348,9 @@ export const Map3D = forwardRef(
           range={range}
           heading={heading}
           tilt={tilt}
-          roll={roll}>
+          roll={roll}
+          mode="HYBRID"
+          >
           {props.children} {/* @ts-ignore */}
         </gmp-map-3d>
 
